@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function TrafficLightSim({ T }) {
-  // Traffic cycle state: 0=Green, 1=Yellow, 2=Red, 3=Red+Yellow
-  const [cycleMode, setCycleMode] = useState('auto'); // 'auto', 'pedestrian', 'manual'
-  const [trafficState, setTrafficState] = useState('GREEN'); // 'GREEN', 'YELLOW', 'RED', 'RED_YELLOW', 'HAZARD_FLIP'
+  // Traffic cycle state: 'GREEN', 'YELLOW', 'RED', 'RED_YELLOW'
+  const [cycleMode, setCycleMode] = useState('auto'); // 'auto', 'hazard', 'manual'
+  const [trafficState, setTrafficState] = useState('GREEN');
   const [pedestrianRequested, setPedestrianRequested] = useState(false);
-  const [hazardFlashing, setHazardFlashing] = useState(false);
   const [flashTick, setFlashTick] = useState(false);
 
   // Manual pin states
@@ -19,10 +18,10 @@ export default function TrafficLightSim({ T }) {
   const vcc = 5.0; // Arduino Uno 5V
 
   const requiredR = Math.round((vcc - calcVf) / (calcCurrentmA / 1000));
-  const nearestE12 = [100, 150, 180, 220, 270, 330, 470, 560, 680, 1000].reduce((prev, curr) => 
+  const nearestE12 = [100, 150, 180, 220, 270, 330, 470, 560, 680, 1000].reduce((prev, curr) =>
     Math.abs(curr - requiredR) < Math.abs(prev - requiredR) ? curr : prev
   );
-  const actualCurrentmA = ((vcc - calcVf) / nearestE12 * 1000).toFixed(1);
+  const actualCurrentmA = (((vcc - calcVf) / nearestE12) * 1000).toFixed(1);
 
   // Auto traffic cycle timer
   useEffect(() => {
@@ -65,11 +64,11 @@ export default function TrafficLightSim({ T }) {
     return () => clearTimeout(timer);
   }, [cycleMode, trafficState, pedestrianRequested]);
 
-  // Hazard mode flasher
+  // Hazard mode flasher (1 Hz = 500ms toggle)
   useEffect(() => {
     if (cycleMode !== 'hazard') return;
     const interval = setInterval(() => {
-      setFlashTick(prev => !prev);
+      setFlashTick((prev) => !prev);
     }, 500);
     return () => clearInterval(interval);
   }, [cycleMode]);
@@ -83,36 +82,46 @@ export default function TrafficLightSim({ T }) {
   }, [cycleMode, flashTick]);
 
   return (
-    <div style={{
-      background: T?.surface || '#080f1c',
-      border: `1px solid ${T?.border || '#111d33'}`,
-      borderRadius: 14,
-      padding: 24,
-      fontFamily: "'Inter', sans-serif",
-      color: T?.text || '#e8edf5',
-      marginBottom: 32,
-      boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
-    }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 10, height: 10, borderRadius: '50%',
-            background: cycleMode === 'auto' ? '#22c55e' : (cycleMode === 'hazard' ? '#f59e0b' : '#3b82f6'),
-            boxShadow: `0 0 12px ${cycleMode === 'auto' ? '#22c55e' : (cycleMode === 'hazard' ? '#f59e0b' : '#3b82f6')}`
-          }} />
-          <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, letterSpacing: 0.5 }}>
-            Arduino Uno R3 · 3-Phase Traffic & Pedestrian Signal Controller
-          </h3>
+    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Title & Mode Switcher */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>
+            Traffic & Pedestrian Signal
+          </span>
+          <span
+            style={{
+              fontSize: 10,
+              fontFamily: "'JetBrains Mono', monospace",
+              padding: '2px 8px',
+              borderRadius: 4,
+              background: cycleMode === 'auto' ? T.greenBg : T.primaryBg,
+              color: cycleMode === 'auto' ? T.green : T.primary,
+              border: `1px solid ${cycleMode === 'auto' ? T.greenBorder : T.primaryBorder}`,
+              fontWeight: 700,
+            }}
+          >
+            {cycleMode === 'auto' ? '● AUTO CYCLE' : cycleMode === 'hazard' ? '● 1Hz FLASHER' : '● MANUAL'}
+          </span>
         </div>
 
-        {/* Mode Selector */}
-        <div style={{ display: 'flex', gap: 6, background: T?.bg || '#04080f', padding: 4, borderRadius: 8, border: `1px solid ${T?.border || '#111d33'}` }}>
+        {/* Mode Selector Tabs */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 4,
+            background: T.surfaceAlt,
+            padding: 3,
+            borderRadius: 8,
+            border: `1px solid ${T.border}`,
+          }}
+        >
           {[
-            { id: 'auto', label: 'Auto Sequence' },
-            { id: 'hazard', label: 'Standby Flasher' },
-            { id: 'manual', label: 'Manual Pin Overrides' }
-          ].map(m => (
+            { id: 'auto', label: 'Auto' },
+            { id: 'hazard', label: 'Standby' },
+            { id: 'manual', label: 'Manual' },
+          ].map((m) => (
             <button
               key={m.id}
               onClick={() => {
@@ -120,15 +129,15 @@ export default function TrafficLightSim({ T }) {
                 if (m.id === 'auto') setTrafficState('GREEN');
               }}
               style={{
-                background: cycleMode === m.id ? (T?.primary || '#4f4dc8') : 'transparent',
-                color: cycleMode === m.id ? '#fff' : (T?.textSub || '#4a5a78'),
+                background: cycleMode === m.id ? T.primary : 'transparent',
+                color: cycleMode === m.id ? '#ffffff' : T.textSub,
                 border: 'none',
                 borderRadius: 6,
-                padding: '6px 12px',
-                fontSize: 12,
-                fontWeight: 600,
+                padding: '6px 8px',
+                fontSize: 11,
+                fontWeight: 700,
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.15s ease',
               }}
             >
               {m.label}
@@ -137,267 +146,288 @@ export default function TrafficLightSim({ T }) {
         </div>
       </div>
 
-      {/* Main Grid: Traffic Signal + Virtual Breadboard + Telemetry */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 1fr) 1.5fr', gap: 24, marginBottom: 24 }}>
-        
-        {/* Left: Physical Traffic Light Housing */}
-        <div style={{
+      {/* Traffic Light Housing & Pedestrian Module (Compact Horizontal or Vertical Card) */}
+      <div
+        style={{
           background: '#030712',
-          border: '2px solid #1f2937',
-          borderRadius: 20,
-          padding: '24px 20px',
+          border: '1px solid #1f2937',
+          borderRadius: 14,
+          padding: 16,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.8), 0 10px 25px rgba(0,0,0,0.5)',
-          position: 'relative'
-        }}>
-          {/* Signal Visor Housing */}
-          <div style={{
+          gap: 14,
+          boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.6)',
+        }}
+      >
+        {/* Signal Visor Chassis */}
+        <div
+          style={{
             background: '#111827',
             border: '2px solid #374151',
-            borderRadius: 36,
-            padding: '16px 14px',
+            borderRadius: 28,
+            padding: '12px 16px',
             display: 'flex',
-            flexDirection: 'column',
-            gap: 16,
-            boxShadow: '0 8px 20px rgba(0,0,0,0.6)'
-          }}>
-            {/* Red Light (Pin 8) */}
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: '50%',
-                background: pin8Red ? '#ef4444' : '#300a0a',
-                border: '3px solid #1f2937',
-                boxShadow: pin8Red ? '0 0 35px #ef4444, inset 0 -4px 12px rgba(0,0,0,0.4)' : 'inset 0 4px 8px rgba(0,0,0,0.8)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s ease'
-              }}>
-                <span style={{ fontSize: 10, fontWeight: 800, color: pin8Red ? '#fff' : '#661a1a', fontFamily: "'JetBrains Mono',monospace" }}>PIN 8</span>
-              </div>
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 14,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.6)',
+          }}
+        >
+          {/* Red Light (Pin 8) */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <div
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                background: pin8Red ? '#ef4444' : '#280808',
+                border: '2px solid #1f2937',
+                boxShadow: pin8Red
+                  ? '0 0 25px #ef4444, inset 0 -3px 8px rgba(0,0,0,0.4)'
+                  : 'inset 0 3px 6px rgba(0,0,0,0.8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 800,
+                  color: pin8Red ? '#ffffff' : '#5c1414',
+                  fontFamily: "'JetBrains Mono',monospace",
+                }}
+              >
+                PIN 8
+              </span>
             </div>
-
-            {/* Yellow Light (Pin 9) */}
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: '50%',
-                background: pin9Yellow ? '#f59e0b' : '#332005',
-                border: '3px solid #1f2937',
-                boxShadow: pin9Yellow ? '0 0 35px #f59e0b, inset 0 -4px 12px rgba(0,0,0,0.4)' : 'inset 0 4px 8px rgba(0,0,0,0.8)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s ease'
-              }}>
-                <span style={{ fontSize: 10, fontWeight: 800, color: pin9Yellow ? '#fff' : '#664005', fontFamily: "'JetBrains Mono',monospace" }}>PIN 9</span>
-              </div>
-            </div>
-
-            {/* Green Light (Pin 10) */}
-            <div style={{ position: 'relative' }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: '50%',
-                background: pin10Green ? '#10b981' : '#04281b',
-                border: '3px solid #1f2937',
-                boxShadow: pin10Green ? '0 0 35px #10b981, inset 0 -4px 12px rgba(0,0,0,0.4)' : 'inset 0 4px 8px rgba(0,0,0,0.8)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'all 0.15s ease'
-              }}>
-                <span style={{ fontSize: 10, fontWeight: 800, color: pin10Green ? '#fff' : '#085038', fontFamily: "'JetBrains Mono',monospace" }}>PIN 10</span>
-              </div>
-            </div>
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#ef4444', fontFamily: "'JetBrains Mono'" }}>RED</span>
           </div>
 
-          {/* Pedestrian Crossing Status */}
-          <div style={{ marginTop: 20, width: '100%', textAlign: 'center' }}>
-            <div style={{
+          {/* Yellow Light (Pin 9) */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <div
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                background: pin9Yellow ? '#f59e0b' : '#2a1b04',
+                border: '2px solid #1f2937',
+                boxShadow: pin9Yellow
+                  ? '0 0 25px #f59e0b, inset 0 -3px 8px rgba(0,0,0,0.4)'
+                  : 'inset 0 3px 6px rgba(0,0,0,0.8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 800,
+                  color: pin9Yellow ? '#ffffff' : '#6b4305',
+                  fontFamily: "'JetBrains Mono',monospace",
+                }}
+              >
+                PIN 9
+              </span>
+            </div>
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#f59e0b', fontFamily: "'JetBrains Mono'" }}>YELLOW</span>
+          </div>
+
+          {/* Green Light (Pin 10) */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <div
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: '50%',
+                background: pin10Green ? '#10b981' : '#032115',
+                border: '2px solid #1f2937',
+                boxShadow: pin10Green
+                  ? '0 0 25px #10b981, inset 0 -3px 8px rgba(0,0,0,0.4)'
+                  : 'inset 0 3px 6px rgba(0,0,0,0.8)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 9,
+                  fontWeight: 800,
+                  color: pin10Green ? '#ffffff' : '#084832',
+                  fontFamily: "'JetBrains Mono',monospace",
+                }}
+              >
+                PIN 10
+              </span>
+            </div>
+            <span style={{ fontSize: 9, fontWeight: 700, color: '#10b981', fontFamily: "'JetBrains Mono'" }}>GREEN</span>
+          </div>
+        </div>
+
+        {/* Pedestrian Crossing Bar & Button */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div
+            style={{
               background: '#090d16',
-              border: `1px solid ${pin8Red ? '#ef4444' : '#1e293b'}`,
-              borderRadius: 10,
-              padding: '10px 14px',
+              border: `1px solid ${pin8Red ? '#10b981' : '#1e293b'}`,
+              borderRadius: 8,
+              padding: '8px 12px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: 12
-            }}>
-              <span style={{ fontSize: 12, color: T?.textSub || '#64748b' }}>Pedestrian Status:</span>
-              <span style={{
-                fontSize: 12, fontWeight: 700,
+            }}
+          >
+            <span style={{ fontSize: 11, color: '#94a3b8' }}>Pedestrian Status:</span>
+            <span
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
                 color: pin8Red ? '#10b981' : '#ef4444',
-                fontFamily: "'JetBrains Mono', monospace"
-              }}>
-                {pin8Red ? 'WALK 🚶' : 'DON\'T WALK ✋'}
-              </span>
-            </div>
-
-            {cycleMode === 'auto' && (
-              <button
-                onClick={() => setPedestrianRequested(true)}
-                disabled={pedestrianRequested || pin8Red}
-                style={{
-                  width: '100%',
-                  background: pedestrianRequested ? '#059669' : '#1e293b',
-                  color: '#fff',
-                  border: `1px solid ${pedestrianRequested ? '#10b981' : '#334155'}`,
-                  borderRadius: 8,
-                  padding: '10px 12px',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: (pedestrianRequested || pin8Red) ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8
-                }}
-              >
-                <span>🔘</span> {pedestrianRequested ? 'Walk Signal Queued...' : 'Press to Cross Street'}
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Right: Breadboard Schematic Wiring & Code Monitor */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          
-          {/* Hardware Pin Mapping Panel */}
-          <div style={{
-            background: T?.surfaceAlt || '#0c1525',
-            border: `1px solid ${T?.border || '#111d33'}`,
-            borderRadius: 12,
-            padding: 18
-          }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: T?.primary || '#818cf8', fontFamily: "'JetBrains Mono', monospace", marginBottom: 12 }}>
-              ARDUINO UNO R3 GPIO TO RESISTOR WIRING
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-              {[
-                { pin: 8, color: '#ef4444', name: 'RED LED', active: pin8Red, toggle: () => setPin8Red(p => !p) },
-                { pin: 9, color: '#f59e0b', name: 'YELLOW LED', active: pin9Yellow, toggle: () => setPin9Yellow(p => !p) },
-                { pin: 10, color: '#10b981', name: 'GREEN LED', active: pin10Green, toggle: () => setPin10Green(p => !p) }
-              ].map(item => (
-                <div key={item.pin} style={{
-                  background: T?.bg || '#04080f',
-                  border: `1px solid ${item.active ? item.color : (T?.border || '#111d33')}`,
-                  borderRadius: 8,
-                  padding: 12,
-                  textAlign: 'center',
-                  transition: 'all 0.2s'
-                }}>
-                  <div style={{ fontSize: 11, color: T?.textSub || '#64748b', marginBottom: 4 }}>DIGITAL PIN {item.pin}</div>
-                  <div style={{ fontSize: 13, fontWeight: 800, color: item.color, marginBottom: 8 }}>{item.name}</div>
-                  <div style={{
-                    fontSize: 11,
-                    fontFamily: "'JetBrains Mono', monospace",
-                    padding: '3px 8px',
-                    borderRadius: 4,
-                    background: item.active ? `${item.color}22` : '#111827',
-                    color: item.active ? item.color : '#475569',
-                    fontWeight: 700,
-                    marginBottom: 8
-                  }}>
-                    {item.active ? 'HIGH (5.0V)' : 'LOW (0.0V)'}
-                  </div>
-                  <div style={{ fontSize: 10, color: T?.textSub || '#64748b' }}>Series: 220Ω → Cathode GND</div>
-
-                  {cycleMode === 'manual' && (
-                    <button
-                      onClick={item.toggle}
-                      style={{
-                        marginTop: 10,
-                        width: '100%',
-                        background: item.active ? item.color : '#1e293b',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: 4,
-                        padding: '6px 0',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {item.active ? 'Turn OFF' : 'Turn ON'}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              {pin8Red ? 'WALK 🚶' : "DON'T WALK ✋"}
+            </span>
           </div>
 
-          {/* Microcontroller State Machine Monitor */}
-          <div style={{
-            background: '#040810',
-            border: `1px solid ${T?.border || '#111d33'}`,
-            borderRadius: 12,
-            padding: 16,
-            fontFamily: "'JetBrains Mono', monospace",
-            fontSize: 12
-          }}>
-            <div style={{ color: '#64748b', marginBottom: 8, display: 'flex', justifyContent: 'space-between' }}>
-              <span>ACTIVE C++ STATE MACHINE</span>
-              <span style={{ color: '#22c55e' }}>loop() ACTIVE</span>
-            </div>
-            <div style={{ color: '#e2e8f0', lineHeight: 1.6 }}>
-              {cycleMode === 'auto' && (
-                <>
-                  <span style={{ color: '#818cf8' }}>switch</span> (currentState) {'{\n'}
-                  {'  '}case <span style={{ color: '#38bdf8' }}>STATE_{trafficState}</span>: {'\n'}
-                  {'    '}digitalWrite(8, {pin8Red ? 'HIGH' : 'LOW'}); // Red{'\n'}
-                  {'    '}digitalWrite(9, {pin9Yellow ? 'HIGH' : 'LOW'}); // Yellow{'\n'}
-                  {'    '}digitalWrite(10, {pin10Green ? 'HIGH' : 'LOW'}); // Green{'\n'}
-                  {'}'}
-                </>
-              )}
-              {cycleMode === 'hazard' && (
-                <>
-                  <span style={{ color: '#f59e0b' }}>// Standby Hazard Mode (Pedestrian Flasher)</span>{'\n'}
-                  digitalWrite(9, {flashTick ? 'HIGH' : 'LOW'}); // 1Hz Yellow Beacon{'\n'}
-                  delay(500);
-                </>
-              )}
-              {cycleMode === 'manual' && (
-                <>
-                  <span style={{ color: '#38bdf8' }}>// Direct GPIO Register Output</span>{'\n'}
-                  PORTB = (Pin 8: {pin8Red ? 1 : 0}, Pin 9: {pin9Yellow ? 1 : 0}, Pin 10: {pin10Green ? 1 : 0});
-                </>
-              )}
-            </div>
-          </div>
+          {cycleMode === 'auto' && (
+            <button
+              onClick={() => setPedestrianRequested(true)}
+              disabled={pedestrianRequested || pin8Red}
+              style={{
+                width: '100%',
+                background: pedestrianRequested ? '#059669' : '#1e293b',
+                color: '#ffffff',
+                border: `1px solid ${pedestrianRequested ? '#10b981' : '#334155'}`,
+                borderRadius: 8,
+                padding: '8px 12px',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: pedestrianRequested || pin8Red ? 'not-allowed' : 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              {pedestrianRequested ? 'Walk Signal Queued...' : '🚶 Press to Request Crosswalk'}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Embedded Ohm's Law Calculator Section */}
-      <div style={{
-        background: T?.bg || '#04080f',
-        border: `1px solid ${T?.border || '#111d33'}`,
-        borderTop: `2px solid ${T?.primary || '#4f4dc8'}`,
-        borderRadius: 12,
-        padding: 20
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: T?.text || '#fff' }}>
-              📐 In-Class Concept Tool: Current-Limiting Resistor Calculator
-            </div>
-            <div style={{ fontSize: 12, color: T?.textSub || '#64748b' }}>
-              Formula: R = (Vcc - Vf) / If | ATmega328P Max GPIO Rating: 40mA (Safe limit: 20mA)
-            </div>
-          </div>
-          <div style={{
-            background: actualCurrentmA > 20 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-            border: `1px solid ${actualCurrentmA > 20 ? '#ef4444' : '#22c55e'}`,
-            color: actualCurrentmA > 20 ? '#ef4444' : '#22c55e',
-            borderRadius: 6,
-            padding: '4px 10px',
-            fontSize: 11,
-            fontWeight: 700
-          }}>
-            {actualCurrentmA > 20 ? '⚠️ High Current Risk' : '✓ Safe GPIO Operation'}
-          </div>
+      {/* Hardware Pin Monitoring & Manual Controls */}
+      <div
+        style={{
+          background: T.surfaceAlt,
+          border: `1px solid ${T.border}`,
+          borderRadius: 10,
+          padding: 12,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 10,
+            fontWeight: 700,
+            color: T.primary,
+            fontFamily: "'JetBrains Mono', monospace",
+            marginBottom: 8,
+          }}
+        >
+          ARDUINO UNO R3 DIGITAL PINS & 220Ω RESISTORS
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {[
+            { pin: 8, color: '#ef4444', name: 'RED', active: pin8Red, toggle: () => setPin8Red((p) => !p) },
+            { pin: 9, color: '#f59e0b', name: 'YELLOW', active: pin9Yellow, toggle: () => setPin9Yellow((p) => !p) },
+            { pin: 10, color: '#10b981', name: 'GREEN', active: pin10Green, toggle: () => setPin10Green((p) => !p) },
+          ].map((item) => (
+            <div
+              key={item.pin}
+              style={{
+                background: T.surface,
+                border: `1px solid ${item.active ? item.color : T.border}`,
+                borderRadius: 6,
+                padding: '8px 6px',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ fontSize: 9, color: T.textSub, fontFamily: "'JetBrains Mono'" }}>PIN {item.pin}</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: item.color, margin: '2px 0' }}>{item.name}</div>
+              <div
+                style={{
+                  fontSize: 10,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  padding: '2px 4px',
+                  borderRadius: 3,
+                  background: item.active ? `${item.color}22` : T.surfaceAlt,
+                  color: item.active ? item.color : T.textMuted,
+                  fontWeight: 700,
+                }}
+              >
+                {item.active ? '5.0V' : '0.0V'}
+              </div>
+
+              {cycleMode === 'manual' && (
+                <button
+                  onClick={item.toggle}
+                  style={{
+                    marginTop: 6,
+                    width: '100%',
+                    background: item.active ? item.color : T.surfaceAlt,
+                    color: item.active ? '#ffffff' : T.text,
+                    border: `1px solid ${T.border}`,
+                    borderRadius: 4,
+                    padding: '4px 0',
+                    fontSize: 9,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {item.active ? 'OFF' : 'ON'}
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* In-Class Concept Tool: Ohm's Law Calculator */}
+      <div
+        style={{
+          background: T.surfaceAlt,
+          border: `1px solid ${T.border}`,
+          borderRadius: 10,
+          padding: 12,
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: T.text }}>
+            📐 Resistor Calculator (Ohm's Law)
+          </span>
+          <span
+            style={{
+              fontSize: 9,
+              fontWeight: 700,
+              padding: '2px 6px',
+              borderRadius: 4,
+              background: actualCurrentmA > 20 ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+              color: actualCurrentmA > 20 ? '#ef4444' : '#10b981',
+              border: `1px solid ${actualCurrentmA > 20 ? '#ef4444' : '#10b981'}`,
+            }}
+          >
+            {actualCurrentmA > 20 ? '⚠️ >20mA Limit' : '✓ Safe GPIO'}
+          </span>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div>
-            <label style={{ fontSize: 11, color: T?.textSub || '#64748b', display: 'block', marginBottom: 6 }}>
+            <label style={{ fontSize: 10, color: T.textSub, display: 'block', marginBottom: 3 }}>
               LED Color / Forward Voltage (Vf):
             </label>
             <select
@@ -405,12 +435,12 @@ export default function TrafficLightSim({ T }) {
               onChange={(e) => setCalcVf(parseFloat(e.target.value))}
               style={{
                 width: '100%',
-                background: T?.surface || '#080f1c',
-                border: `1px solid ${T?.border || '#111d33'}`,
-                color: T?.text || '#fff',
-                padding: '8px 10px',
+                background: T.surface,
+                border: `1px solid ${T.border}`,
+                color: T.text,
+                padding: '6px 8px',
                 borderRadius: 6,
-                fontSize: 12
+                fontSize: 11,
               }}
             >
               <option value="2.0">Red / Yellow LED (~2.0V)</option>
@@ -420,35 +450,89 @@ export default function TrafficLightSim({ T }) {
           </div>
 
           <div>
-            <label style={{ fontSize: 11, color: T?.textSub || '#64748b', display: 'block', marginBottom: 6 }}>
-              Target Forward Current (If): <strong style={{ color: T?.primary || '#818cf8' }}>{calcCurrentmA} mA</strong>
-            </label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: T.textSub }}>
+              <span>Target Current (If):</span>
+              <strong style={{ color: T.primary }}>{calcCurrentmA} mA</strong>
+            </div>
             <input
               type="range"
               min="5"
               max="35"
               value={calcCurrentmA}
               onChange={(e) => setCalcCurrentmA(parseInt(e.target.value))}
-              style={{ width: '100%', accentColor: T?.primary || '#4f4dc8' }}
+              style={{ width: '100%', accentColor: T.primary }}
             />
           </div>
 
-          <div style={{
-            background: T?.surface || '#080f1c',
-            border: `1px solid ${T?.border || '#111d33'}`,
-            borderRadius: 8,
-            padding: '12px 16px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: 10, color: T?.textSub || '#64748b' }}>CALCULATED RESISTANCE</div>
-            <div style={{ fontSize: 20, fontWeight: 800, color: '#38bdf8', fontFamily: "'JetBrains Mono', monospace" }}>
-              {requiredR} Ω
+          <div
+            style={{
+              background: T.surface,
+              border: `1px solid ${T.border}`,
+              borderRadius: 6,
+              padding: '8px 10px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 9, color: T.textSub }}>IDEAL RESISTANCE</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: T.primary, fontFamily: "'JetBrains Mono'" }}>
+                {requiredR} Ω
+              </div>
             </div>
-            <div style={{ fontSize: 11, color: T?.textSub || '#64748b', marginTop: 2 }}>
-              Nearest E12: <strong style={{ color: '#fff' }}>{nearestE12} Ω</strong> (Actual: {actualCurrentmA} mA)
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 9, color: T.textSub }}>NEAREST E12</div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: T.text, fontFamily: "'JetBrains Mono'" }}>
+                {nearestE12} Ω <span style={{ fontSize: 10, color: T.textMuted }}>({actualCurrentmA}mA)</span>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Active C++ State Machine Terminal */}
+      <div
+        style={{
+          background: '#040810',
+          border: `1px solid ${T.border}`,
+          borderRadius: 8,
+          padding: 10,
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: 10.5,
+          color: '#e2e8f0',
+          lineHeight: 1.5,
+        }}
+      >
+        <div style={{ color: '#64748b', marginBottom: 4, display: 'flex', justifyContent: 'space-between' }}>
+          <span>ARDUINO C++ STATE MACHINE</span>
+          <span style={{ color: '#22c55e' }}>● loop()</span>
+        </div>
+        {cycleMode === 'auto' && (
+          <div>
+            <span style={{ color: '#818cf8' }}>switch</span> (state) &#123;{'\n'}
+            {'  '}case <span style={{ color: '#38bdf8' }}>STATE_{trafficState}</span>:{'\n'}
+            {'    '}digitalWrite(8, {pin8Red ? 'HIGH' : 'LOW'});{'\n'}
+            {'    '}digitalWrite(9, {pin9Yellow ? 'HIGH' : 'LOW'});{'\n'}
+            {'    '}digitalWrite(10, {pin10Green ? 'HIGH' : 'LOW'});{'\n'}
+            &#125;
+          </div>
+        )}
+        {cycleMode === 'hazard' && (
+          <div>
+            <span style={{ color: '#f59e0b' }}>// Standby Hazard 1Hz Flasher</span>{'\n'}
+            digitalWrite(9, {flashTick ? 'HIGH' : 'LOW'});{'\n'}
+            delay(500);
+          </div>
+        )}
+        {cycleMode === 'manual' && (
+          <div>
+            <span style={{ color: '#38bdf8' }}>// Direct Pin Override</span>{'\n'}
+            digitalWrite(8, {pin8Red ? 'HIGH' : 'LOW'});{'\n'}
+            digitalWrite(9, {pin9Yellow ? 'HIGH' : 'LOW'});{'\n'}
+            digitalWrite(10, {pin10Green ? 'HIGH' : 'LOW'});
+          </div>
+        )}
       </div>
     </div>
   );
