@@ -6,16 +6,16 @@ export default function RelayPowerSim({ T }) {
   return (
     <div style={{ padding: 16 }}>
       <p style={{ fontSize: 13, color: T.textSub, marginBottom: 16 }}>
-        Click the button to send a digital HIGH signal to the relay. Notice how the low-voltage ESP32 can mechanically switch a high-voltage 120V AC lightbulb.
+        Click the button to send a digital HIGH signal to the relay. Notice how the low-voltage Arduino Uno can mechanically switch a high-voltage 120V AC lightbulb.
       </p>
 
       <div style={{ background: T.surfaceAlt, padding: 32, borderRadius: 12, border: `1px solid ${T.border}`, marginBottom: 20, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginBottom: 40, width: '100%' }}>
           
-          {/* ESP32 Side */}
+          {/* Arduino Side */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700 }}>3.3V Logic</div>
+            <div style={{ fontSize: 10, color: T.textMuted, fontWeight: 700 }}>5.0V Logic</div>
             <button 
               onClick={() => setRelayOn(!relayOn)}
               style={{ 

@@ -32,7 +32,7 @@ export default function SerialCommSim({ T }) {
   return (
     <div style={{ padding: 16 }}>
       <p style={{ fontSize: 13, color: T.textSub, marginBottom: 16 }}>
-        The Serial Monitor is your window into the ESP32's brain. Click Run to simulate sensor data streaming to your PC via the USB cable.
+        The Serial Monitor is your window into the Arduino's brain. Click Run to simulate sensor data streaming to your PC via the USB cable.
       </p>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>

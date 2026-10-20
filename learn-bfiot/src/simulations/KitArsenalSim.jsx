@@ -9,8 +9,8 @@ export default function KitArsenalSim({ T }) {
       name: 'The Brains',
       color: T.primary,
       icon: '🧠',
-      items: ['ESP32 Dev Board'],
-      desc: 'The master controller. It runs your C++ code and connects to Wi-Fi.'
+      items: ['Arduino Uno R3 SMD'],
+      desc: 'The master controller. It runs your embedded C++ sketch on the ATmega328P.'
     },
     {
       id: 'senses',

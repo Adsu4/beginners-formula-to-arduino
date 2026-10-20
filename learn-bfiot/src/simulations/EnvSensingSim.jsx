@@ -7,7 +7,7 @@ export default function EnvSensingSim({ T }) {
   return (
     <div style={{ padding: 16 }}>
       <p style={{ fontSize: 13, color: T.textSub, marginBottom: 16 }}>
-        Adjust the environmental conditions. Notice how the ESP32 reads the DHT11 sensor and dynamically updates the OLED display over I2C.
+        Adjust the environmental conditions. Notice how the Arduino Uno reads the DHT11 sensor and dynamically updates the OLED display over I2C.
       </p>
 
       <div style={{ background: T.surfaceAlt, padding: 32, borderRadius: 12, border: `1px solid ${T.border}`, marginBottom: 20, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

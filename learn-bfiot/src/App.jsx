@@ -18,6 +18,11 @@ import HighVoltageBridgeSim from './simulations/HighVoltageBridgeSim.jsx';
 import LocalHotspotSim from './simulations/LocalHotspotSim.jsx';
 import TwoWayDataSim from './simulations/TwoWayDataSim.jsx';
 import SmartHomeHubSim from './simulations/SmartHomeHubSim.jsx';
+import TrafficLightSim from './simulations/TrafficLightSim.jsx';
+import AdcSerialTelemetrySim from './simulations/AdcSerialTelemetrySim.jsx';
+import UltrasonicParkingSim from './simulations/UltrasonicParkingSim.jsx';
+import ServoI2cDashboardSim from './simulations/ServoI2cDashboardSim.jsx';
+import AutonomousRadarStationSim from './simulations/AutonomousRadarStationSim.jsx';
 
 
 // ── SYSTEM CONFIGURATION ─────────────────────────────────────────────
@@ -25,11 +30,11 @@ import SmartHomeHubSim from './simulations/SmartHomeHubSim.jsx';
 const OR_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 const OR_MODEL = 'deepseek/deepseek-chat';
 
-const PROJ_SYSTEM = `You are an expert hardware maker and IoT mentor with the personality of a confident technical YouTuber — think GreatScott! meets The Engineering Mindset. You talk to makers like a knowledgeable friend.
+const PROJ_SYSTEM = `You are an expert embedded systems maker and robotics mentor with the personality of a confident technical YouTuber — think GreatScott! meets The Engineering Mindset. You talk to makers like a knowledgeable friend.
 
 HARD RULES:
-1. Always design around the ESP32 development board. That is the only microcontroller.
-2. The AI system MUST try its level best to curate the whole step-by-step answer with the minimum number of external components. Prioritize using ONLY components from the user's kit: ESP32 Development Board, 0.96 inch OLED Display, DHT11 (Temp/Humidity) Sensor, Ultrasonic Sensor (HC-SR04), IR Sensor, LDR (Light Sensor), Active Buzzer, SG90 Servo Motor, 555 Timer IC, BC547 Transistors, Potentiometer (10k), Push Buttons, Breadboard, Jumper Wires (M-M, M-F, F-F), LEDs (Single Colors & RGB), Capacitors & Resistors Set, Single channel relay, micro USB cable.
+1. Always design around the Arduino Uno R3 SMD (ATmega328P) development board with 5V logic. That is the only primary microcontroller.
+2. The AI system MUST try its level best to curate the whole step-by-step answer with the minimum number of external components. Prioritize using ONLY components from the user's kit: Arduino Uno R3 SMD, 16x2 I2C Display / 0.96 inch OLED Display, DHT11 Sensor, HC-SR04 Ultrasonic Sensor, IR Sensor, LDR (Light Sensor), SG90 Micro Servo, Passive Piezo Buzzer, 10k Potentiometer, Push Buttons, Breadboard, Jumper Wires (M-M, M-F, F-F), LEDs (Red, Yellow, Green), Capacitors (100uF, 0.1uF), Resistors (220Ω, 1kΩ, 10kΩ), Single channel 5V relay, BC547 Transistors, 555 Timer IC, USB cable.
 3. While the step-by-step answer tries its best to keep components limited to the kit, it's okay if it mentions things not included in the kit, but it MUST be clearly mentioned that the component should be externally sourced from somewhere and is not present in the kit. If an idea ABSOLUTELY requires a component outside this kit, you MUST flag it in the "why" field by starting with "[EXTERNAL]" and clearly state it needs to be sourced externally.
 4. Return ONLY a raw JSON object. Zero markdown fences. Zero preamble. Zero explanation. Just the JSON.
 5. All code must be real, working Arduino C++ (no pseudocode).
@@ -43,7 +48,7 @@ Return exactly this JSON shape:
     "buildTime": "e.g. 2-3 hours"
   },
   "parts": [
-    { "category": "Microcontroller", "name": "ESP32 Dev Board", "quantity": 1, "why": "one honest sentence on why this part." },
+    { "category": "Microcontroller", "name": "Arduino Uno R3 SMD", "quantity": 1, "why": "ATmega328P based 5V central embedded processor." },
     { "category": "Sensors", "name": "Water Level Sensor", "quantity": 1, "why": "[EXTERNAL] Not in kit. Must be externally sourced to detect water depth." }
   ],
   "steps": [
@@ -544,7 +549,7 @@ function LessonSimulator({ pageId, T }) {
   const potVal = Math.round(((knobAngle - 30) / 300) * 100) || 0; // Blink precise interval engine (M5)
 
   useEffect(() => {
-    if (pageId !== 'p2m2') return;
+    if (pageId !== 'p3m2') return;
     let timer;
     const cycle = () => {
       setOnboardBlink((prev) => {
@@ -603,7 +608,15 @@ function LessonSimulator({ pageId, T }) {
         {' '}
       </div>
       {' '}
-      {pageId === 'p1m1' && (
+      {/* ── PHASE 1: THE ARDUINO COHORT (GEC THRISSUR) ─────────────── */}
+      {pageId === 'p1m1' && <TrafficLightSim T={T} />}
+      {pageId === 'p1m2' && <AdcSerialTelemetrySim T={T} />}
+      {pageId === 'p1m3' && <UltrasonicParkingSim T={T} />}
+      {pageId === 'p1m4' && <ServoI2cDashboardSim T={T} />}
+      {pageId === 'p1cap' && <AutonomousRadarStationSim T={T} />}
+
+      {/* ── PHASE 2: PURE HARDWARE (FORMER PHASE 1) ───────────────── */}
+      {pageId === 'p2m1' && (
         <div>
           {' '}
           <p style={{ fontSize: 13, color: T.textSub, marginBottom: 16 }}>
@@ -686,7 +699,7 @@ function LessonSimulator({ pageId, T }) {
         </div>
       )}
       {' '}
-      {pageId === 'p1m2' && (
+      {pageId === 'p2m2' && (
         <div>
           {' '}
           <p style={{ fontSize: 13, color: T.textSub, marginBottom: 16 }}>
@@ -787,7 +800,7 @@ function LessonSimulator({ pageId, T }) {
         </div>
       )}
       {' '}
-      {pageId === 'p1m3' && (
+      {pageId === 'p2m3' && (
         <div>
           {' '}
           <p style={{ fontSize: 13, color: T.textSub, marginBottom: 16 }}>
@@ -923,7 +936,7 @@ function LessonSimulator({ pageId, T }) {
         </div>
       )}
       {' '}
-      {pageId === 'p1m4' && (
+      {pageId === 'p2m4' && (
         <div>
           {' '}
           <p style={{ fontSize: 13, color: T.textSub, marginBottom: 16 }}>
@@ -1003,7 +1016,7 @@ function LessonSimulator({ pageId, T }) {
         </div>
       )}
       {' '}
-      {pageId === 'p2m2' && (
+      {pageId === 'p3m2' && (
         <div>
           {' '}
           <p style={{ fontSize: 13, color: T.textSub, marginBottom: 16 }}>
@@ -1110,8 +1123,8 @@ function LessonSimulator({ pageId, T }) {
                   width: 20,
                   height: 20,
                   borderRadius: '50%',
-                  background: onboardBlink ? '#3b82f6' : '#1e2d4a',
-                  boxShadow: onboardBlink ? '0 0 20px #3b82f6' : 'none',
+                  background: onboardBlink ? '#eab308' : '#1e2d4a',
+                  boxShadow: onboardBlink ? '0 0 20px #eab308' : 'none',
                   margin: '0 auto 10px',
                   transition: 'all 0.05s',
                 }}
@@ -1124,7 +1137,7 @@ function LessonSimulator({ pageId, T }) {
                   color: '#888',
                 }}
               >
-                ESP32 ONBOARD GPIO_2 LED
+                ARDUINO UNO PIN 13 'L' LED
               </span>
               {' '}
             </div>
@@ -1134,7 +1147,7 @@ function LessonSimulator({ pageId, T }) {
         </div>
       )}
       {' '}
-      {pageId === 'p2m3' && (
+      {pageId === 'p3m3' && (
         <div>
           {' '}
           <p style={{ fontSize: 13, color: T.textSub, marginBottom: 16 }}>
@@ -1207,20 +1220,20 @@ function LessonSimulator({ pageId, T }) {
           {' '}
         </div>
       )}
-      {pageId === 'p1m5' && <HardwareTimerSim T={T} />}
-      {pageId === 'p1cap' && <VaultAlarmSim T={T} />}
-      {pageId === 'p2m4' && <AnalogOutputSim T={T} />}
-      {pageId === 'p2m5' && <SerialCommSim T={T} />}
-      {pageId === 'p2cap' && <ThermometerSim T={T} />}
-      {pageId === 'p3m1' && <ServoMotorSim T={T} />}
-      {pageId === 'p3m2' && <OledDisplaySim T={T} />}
-      {pageId === 'p3m3' && <EnvSensingSim T={T} />}
-      {pageId === 'p3m4' && <RelayPowerSim T={T} />}
-      {pageId === 'p3cap' && <DesktopRadarSim T={T} />}
-      {pageId === 'p4m1' && <HighVoltageBridgeSim T={T} />}
-      {pageId === 'p4m2' && <LocalHotspotSim T={T} />}
-      {pageId === 'p4m3' && <TwoWayDataSim T={T} />}
-      {pageId === 'p4cap' && <SmartHomeHubSim T={T} />}
+      {pageId === 'p2m5' && <HardwareTimerSim T={T} />}
+      {pageId === 'p2cap' && <VaultAlarmSim T={T} />}
+      {pageId === 'p3m4' && <AnalogOutputSim T={T} />}
+      {pageId === 'p3m5' && <SerialCommSim T={T} />}
+      {pageId === 'p3cap' && <ThermometerSim T={T} />}
+      {pageId === 'p4m1' && <ServoMotorSim T={T} />}
+      {pageId === 'p4m2' && <OledDisplaySim T={T} />}
+      {pageId === 'p4m3' && <EnvSensingSim T={T} />}
+      {pageId === 'p4m4' && <RelayPowerSim T={T} />}
+      {pageId === 'p4cap' && <DesktopRadarSim T={T} />}
+      {pageId === 'p5m1' && <HighVoltageBridgeSim T={T} />}
+      {pageId === 'p5m2' && <LocalHotspotSim T={T} />}
+      {pageId === 'p5m3' && <TwoWayDataSim T={T} />}
+      {pageId === 'p5cap' && <SmartHomeHubSim T={T} />}
 
       {/* Fallback for Phase 3/4 modules */}     {' '}
       {['m7', 'm8', 'm9', 'm10', 'm11', 'm12'].includes(pageId) && (
@@ -1359,21 +1372,21 @@ function ComponentModal({ componentName, T, onClose }) {
           </svg>
         </button>
 
-        {componentName === 'ESP32 Development Board' ? (
+        {(componentName === 'Arduino Uno R3 SMD' || componentName === 'ESP32 Development Board') ? (
           <div>
             <h1 style={{ fontSize: 32, fontWeight: 800, marginBottom: 16, color: T.text }}>
-              {componentName}
+              Arduino Uno R3 SMD (ATmega328P)
             </h1>
             <div style={{ width: '100%', height: 300, background: T.primaryBg, borderRadius: 16, marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-              <img src="https://robukits.in/static/uploads/esp32devkit1.png" alt="ESP32" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#fff' }} />
+              <img src="https://m.media-amazon.com/images/I/61t0o6N8yBL._SL1100_.jpg" alt="Arduino Uno R3 SMD" style={{ width: '100%', height: '100%', objectFit: 'contain', background: '#fff' }} />
             </div>
 
-            <h2 style={{ fontSize: 24, fontWeight: 700, color: T.primary, marginBottom: 12 }}>Meet the ESP32: The Brain of Your Projects</h2>
+            <h2 style={{ fontSize: 24, fontWeight: 700, color: T.primary, marginBottom: 12 }}>Meet the Uno R3 SMD: The Core Workhorse</h2>
             <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.8, marginBottom: 24 }}>
-              Think of the ESP32 as a tiny, highly capable computer on a single board. It’s built to read sensors, control motors, connect to the internet, and make decisions all at the same time.
+              The Arduino Uno R3 SMD is the global engineering gold standard for microcontroller education, robotics, and embedded instrumentation. Powered by Microchip's 8-bit ATmega328P processor, it operates on a robust 5.0V electrical system with exceptional electrical resilience and real-time deterministic hardware execution.
             </p>
             <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.8, marginBottom: 32 }}>
-              Here is what makes it tick:
+              Here is what makes the Uno R3 SMD tick:
             </p>
 
             <div style={{ marginTop: 40 }}>
@@ -1381,59 +1394,36 @@ function ComponentModal({ componentName, T, onClose }) {
                 <div style={{ width: 40, height: 40, borderRadius: 12, background: T.primaryBg, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
                   <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="9" y1="20" x2="9" y2="23"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
                 </div>
-                <h2 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>The Core Brain (ESP-WROOM-32)</h2>
+                <h2 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>The Core Brain (ATmega328P SMD)</h2>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                 <div style={{ padding: 20, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: T.primary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Dual-Core Power</div>
-                  <div style={{ fontSize: 15, color: T.textSub, lineHeight: 1.6 }}>Unlike older single-core chips, the ESP32 can run a web server and check sensors simultaneously.</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.primary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>AVR RISC Architecture</div>
+                  <div style={{ fontSize: 15, color: T.textSub, lineHeight: 1.6 }}>Single-cycle execution with 32 general-purpose 8-bit registers and deterministic nanosecond instruction timing.</div>
                 </div>
                 <div style={{ padding: 20, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: T.primary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Blazing Speed</div>
-                  <div style={{ fontSize: 15, color: T.textSub, lineHeight: 1.6 }}>It runs at up to <strong style={{ color: T.text }}>240 MHz</strong>, making it incredibly fast in the microcontroller world.</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.primary, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>16 MHz Ceramic Resonator</div>
+                  <div style={{ fontSize: 15, color: T.textSub, lineHeight: 1.6 }}>Runs at <strong style={{ color: T.text }}>16 MHz</strong> clock frequency, yielding 16 MIPS throughput with no OS overhead.</div>
                 </div>
               </div>
 
               <div style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 12, marginTop: 24 }}>Memory Architecture</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 40 }}>
                 <div style={{ padding: 16, background: T.primaryBg, borderRadius: 12 }}>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 4 }}>ROM</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: T.primary, marginBottom: 8 }}>448 KB</div>
-                  <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Permanent instructions to wake the chip up.</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 4 }}>Flash</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.primary, marginBottom: 8 }}>32 KB</div>
+                  <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Non-volatile memory for compiled code (0.5KB used by Optiboot).</div>
                 </div>
                 <div style={{ padding: 16, background: T.primaryBg, borderRadius: 12 }}>
                   <div style={{ fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 4 }}>SRAM</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: T.primary, marginBottom: 8 }}>520 KB</div>
-                  <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Short-term memory while code is actively running.</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.primary, marginBottom: 8 }}>2 KB</div>
+                  <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Ultra-fast static RAM for runtime variables and call stack.</div>
                 </div>
                 <div style={{ padding: 16, background: T.primaryBg, borderRadius: 12 }}>
-                  <div style={{ fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 4 }}>Flash</div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: T.primary, marginBottom: 8 }}>4 MB</div>
-                  <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>The "hard drive". Code is saved here permanently.</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: T.text, marginBottom: 4 }}>EEPROM</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: T.primary, marginBottom: 8 }}>1 KB</div>
+                  <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Persistent byte memory that survives power cut-offs.</div>
                 </div>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: T.primaryBg, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
-                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
-              </div>
-              <h2 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>Wireless Connection</h2>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 40 }}>
-              <div style={{ padding: 20, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: T.green, marginRight: 8 }}></div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>WiFi Built-In</div>
-                </div>
-                <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>Connects to your home router for internet access, or acts as its own mini-router.</div>
-              </div>
-              <div style={{ padding: 20, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6', marginRight: 8 }}></div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: T.text }}>Bluetooth & BLE</div>
-                </div>
-                <div style={{ fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>Supports standard Bluetooth for audio and super power-efficient BLE for wearables.</div>
               </div>
             </div>
 
@@ -1441,29 +1431,29 @@ function ComponentModal({ componentName, T, onClose }) {
               <div style={{ width: 40, height: 40, borderRadius: 12, background: T.primaryBg, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
                 <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
               </div>
-              <h2 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>Powering the Board</h2>
+              <h2 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>Powering the Board & 5.0V Logic</h2>
             </div>
 
             <div style={{ padding: 24, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, marginBottom: 40 }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16 }}>
-                <div style={{ padding: '4px 10px', background: T.primaryBg, color: T.primary, borderRadius: 6, fontSize: 13, fontWeight: 700, marginRight: 12 }}>CRITICAL</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: T.text }}>The 3.3V Rule</div>
+                <div style={{ padding: '4px 10px', background: T.greenBg, color: T.green, borderRadius: 6, fontSize: 13, fontWeight: 700, marginRight: 12 }}>ROBUST 5V</div>
+                <div style={{ fontSize: 16, fontWeight: 600, color: T.text }}>High Noise Immunity Standard</div>
               </div>
               <p style={{ fontSize: 15, color: T.textSub, lineHeight: 1.7, marginBottom: 24 }}>
-                The ESP32 chip itself runs strictly on <strong style={{ color: T.text }}>3.3 Volts</strong>.
+                The Arduino Uno operates natively at <strong style={{ color: T.text }}>5.0 Volts</strong>. This gives superior signal margins for industrial sensors, servos, ultrasonic rangefinders, and relays compared to fragile 3.3V processors.
               </p>
 
               <div style={{ width: '100%', height: 1, background: T.border, marginBottom: 24 }}></div>
 
-              <div style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 16 }}>How to Power It:</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: T.text, marginBottom: 16 }}>Power Sources:</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start' }}>
                   <div style={{ width: 24, height: 24, borderRadius: 6, background: T.primaryBg, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 12, marginTop: 2, flexShrink: 0 }}>
                     <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="12" x2="2" y2="12"></line><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path><line x1="6" y1="16" x2="6.01" y2="16"></line><line x1="10" y1="16" x2="10.01" y2="16"></line></svg>
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>USB Port</div>
-                    <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>The easiest way. Plug a Micro-USB into your PC.</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>USB Port (5V)</div>
+                    <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Powers the board directly from PC with 500mA resettable polyfuse protection.</div>
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -1471,13 +1461,13 @@ function ComponentModal({ componentName, T, onClose }) {
                     <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><rect x="4" y="6" width="16" height="16" rx="2" ry="2"></rect><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>
                   </div>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>VIN Pin</div>
-                    <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Feed a 5V battery directly for standalone robots.</div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: T.text, marginBottom: 4 }}>DC Barrel Jack / VIN (7-12V)</div>
+                    <div style={{ fontSize: 13, color: T.textSub, lineHeight: 1.5 }}>Stepped down cleanly to 5V via onboard linear regulator for mobile battery operation.</div>
                   </div>
                 </div>
               </div>
               <div style={{ padding: 16, background: T.primaryBg, borderRadius: 12, fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>
-                <strong style={{ color: T.text }}>The Regulator:</strong> USB and VIN provide 5V, so the board has a built-in voltage regulator to safely step it down to 3.3V. You can borrow this 3.3V power for sensors using the 3V3 pin.
+                <strong style={{ color: T.text }}>Current Budgeting:</strong> Absolute maximum current limit is <strong style={{ color: '#ef4444' }}>40 mA</strong> per GPIO pin (20 mA recommended continuous), and <strong style={{ color: '#ef4444' }}>200 mA</strong> total across the entire chip.
               </div>
             </div>
 
@@ -1485,30 +1475,30 @@ function ComponentModal({ componentName, T, onClose }) {
               <div style={{ width: 40, height: 40, borderRadius: 12, background: T.primaryBg, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
                 <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
               </div>
-              <h2 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>The Pins (I/O)</h2>
+              <h2 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>The Pin Architecture (I/O)</h2>
             </div>
             <p style={{ fontSize: 15, color: T.textSub, lineHeight: 1.7, marginBottom: 20 }}>
-              The metal pins on the sides are how the ESP32 talks to the physical world:
+              The header pins provide point-to-point connections to your breadboard:
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 24 }}>
               <div style={{ padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, textAlign: 'center' }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: T.primary, marginBottom: 4 }}>15</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Analog Inputs</div>
-                <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>For reading variable voltage sensors.</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: T.primary, marginBottom: 4 }}>14</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Digital Pins (0–13)</div>
+                <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>PinMode INPUT / OUTPUT with internal pull-up resistors.</div>
               </div>
               <div style={{ padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, textAlign: 'center' }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: T.primary, marginBottom: 4 }}>25</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>PWM Outputs</div>
-                <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>For fading LEDs or controlling motors.</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: T.primary, marginBottom: 4 }}>6 PWM</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Pins 3, 5, 6, 9, 10, 11</div>
+                <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>8-bit resolution (0–255) for LED fading, buzzer tones & servos.</div>
               </div>
               <div style={{ padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, textAlign: 'center' }}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: T.primary, marginBottom: 4 }}>9</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Touch Pads</div>
-                <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>Use pins directly as touch buttons!</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: T.primary, marginBottom: 4 }}>6 Analog</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: T.text, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Pins A0–A5 (10-bit)</div>
+                <div style={{ fontSize: 12, color: T.textSub, lineHeight: 1.5 }}>Quantizes 0–5V into 0–1023 integers (4.887 mV per step).</div>
               </div>
             </div>
             <div style={{ padding: 16, background: T.primaryBg, borderRadius: 12, fontSize: 14, color: T.textSub, lineHeight: 1.6, marginBottom: 40 }}>
-              <strong style={{ color: T.text }}>Pin Multiplexing:</strong> Most pins aren't locked into just one job. You can program them to act as an input, an output, or a sensor reader depending on what you need.
+              <strong style={{ color: T.text }}>Dedicated Bus Pins:</strong> Pins A4 (SDA) and A5 (SCL) form the hardware I2C bus for displays and sensors. Pins 10–13 support SPI high-speed communication.
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 40 }}>
@@ -1517,13 +1507,13 @@ function ComponentModal({ componentName, T, onClose }) {
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: T.primaryBg, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
                     <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
                   </div>
-                  <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text, margin: 0 }}>Buttons & Lights</h2>
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text, margin: 0 }}>Onboard Indicators & Reset</h2>
                 </div>
                 <ul style={{ fontSize: 14, color: T.textSub, lineHeight: 1.8, paddingLeft: 24, listStyleType: 'disc', margin: 0 }}>
-                  <li><strong style={{ color: T.text }}>EN Button:</strong> Reset button. Press to restart code.</li>
-                  <li><strong style={{ color: T.text }}>BOOT Button:</strong> Hold to prepare for new code uploads.</li>
-                  <li><strong style={{ color: T.text }}>Red LED:</strong> Power indicator.</li>
-                  <li><strong style={{ color: T.text }}>Blue LED:</strong> User programmable (wired to D2).</li>
+                  <li><strong style={{ color: T.text }}>Reset Button:</strong> Pulses ATmega328P reset line to reload program from setup().</li>
+                  <li><strong style={{ color: T.text }}>ON LED:</strong> Indicates healthy 5V rail status.</li>
+                  <li><strong style={{ color: T.text }}>L LED:</strong> Yellow surface-mount LED hardwired to Digital Pin 13.</li>
+                  <li><strong style={{ color: T.text }}>TX / RX LEDs:</strong> Blink during active serial communication over USB.</li>
                 </ul>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -1531,10 +1521,10 @@ function ComponentModal({ componentName, T, onClose }) {
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: T.primaryBg, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
                     <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
                   </div>
-                  <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text, margin: 0 }}>Computer Translation</h2>
+                  <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text, margin: 0 }}>USB-to-Serial Bridge</h2>
                 </div>
                 <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.8, margin: 0 }}>
-                  Your computer speaks "USB", but the ESP32 speaks "Serial". The tiny <strong style={{ color: T.text }}>CP2102 chip</strong> near the USB port acts as a live translator between the two so you can easily upload code.
+                  Computers transfer data via USB packets, whereas microcontrollers communicate via asynchronous UART TTL. The onboard <strong style={{ color: T.text }}>CH340 / ATmega16U2</strong> converter manages automatic baud rate negotiation and auto-resets the MCU so sketches upload smoothly with a single click.
                 </p>
               </div>
             </div>
@@ -1575,7 +1565,7 @@ function ComponentModal({ componentName, T, onClose }) {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'flex-start' }}>
                     <div style={{ padding: '4px 10px', background: T.primaryBg, color: T.primary, borderRadius: 6, fontSize: 12, fontWeight: 700, marginRight: 12, width: 80, textAlign: 'center', flexShrink: 0 }}>JOB</div>
-                    <div style={{ fontSize: 15, color: T.textSub, lineHeight: 1.6 }}>These are your power highways. You plug your ESP32's 3V3 pin into the positive line, and the GND pin into the negative line. Now, any hole on that entire positive line provides 3.3V power, and any hole on the negative line provides Ground.</div>
+                    <div style={{ fontSize: 15, color: T.textSub, lineHeight: 1.6 }}>These are your power highways. You plug your Arduino Uno's 5V pin into the positive line, and the GND pin into the negative line. Now, any hole on that entire positive line provides 5V power, and any hole on the negative line provides Ground.</div>
                   </div>
                 </div>
                 <div style={{ width: '100%', height: 1, background: T.border, margin: '20px 0' }}></div>
@@ -1648,7 +1638,7 @@ function ComponentModal({ componentName, T, onClose }) {
 
             <h2 style={{ fontSize: 24, fontWeight: 700, color: T.primary, marginBottom: 12 }}>The Circulatory System</h2>
             <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.8, marginBottom: 40 }}>
-              The circulatory system of your hardware. These carry voltage and digital signals between your ESP32 microcontroller, your breadboard, and your components.
+              The circulatory system of your hardware. These carry voltage and digital signals between your Arduino Uno microcontroller, your breadboard, and your components.
             </p>
 
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
@@ -1722,7 +1712,7 @@ function ComponentModal({ componentName, T, onClose }) {
                 </div>
                 <div style={{ padding: 20, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, flex: 1 }}>
                   <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, margin: 0 }}>
-                    The glass screen is driven by a hidden chip called the SSD1306. Because controlling 8,192 individual pixels would normally require hundreds of wires, the SSD1306 chip uses the I2C communication protocol. It takes complex graphics commands from your ESP32 over a digital "highway" and translates them into pixel rendering, requiring only two data wires to function.
+                    The glass screen is driven by a hidden chip called the SSD1306. Because controlling 8,192 individual pixels would normally require hundreds of wires, the SSD1306 chip uses the I2C communication protocol. It takes complex graphics commands from your Arduino Uno over a two-wire bus and translates them into pixel rendering.
                   </p>
                 </div>
               </div>
@@ -1737,19 +1727,19 @@ function ComponentModal({ componentName, T, onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12, marginBottom: 40 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: T.primaryBg, color: T.primary, borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>VCC</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Power input. Connect to the <strong style={{ color: T.text }}>3V3 (3.3 Volt)</strong> pin on the ESP32.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Power input. Connect to the <strong style={{ color: T.text }}>5V (or 3.3V)</strong> pin on the Arduino Uno.</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: 'rgba(107, 114, 128, 0.1)', color: T.text, borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>GND</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Ground connection. Connect to the <strong style={{ color: T.text }}>ESP32 GND</strong>.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Ground connection. Connect to <strong style={{ color: T.text }}>Arduino Uno GND</strong>.</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>SDA</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}><strong style={{ color: T.text }}>Serial Data:</strong> The data highway line. Connect to ESP32 <strong style={{ color: T.text }}>GPIO 21</strong>.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}><strong style={{ color: T.text }}>Serial Data:</strong> The I2C data line. Connect to Arduino Uno <strong style={{ color: T.text }}>Pin A4 (SDA)</strong>.</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
-                <div style={{ padding: '4px 10px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>SCK</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}><strong style={{ color: T.text }}>Serial Clock:</strong> The timing line that keeps data synchronized. Connect to ESP32 <strong style={{ color: T.text }}>GPIO 22</strong>.</div>
+                <div style={{ padding: '4px 10px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>SCL</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}><strong style={{ color: T.text }}>Serial Clock:</strong> The timing clock line. Connect to Arduino Uno <strong style={{ color: T.text }}>Pin A5 (SCL)</strong>.</div>
               </div>
             </div>
           </div>
@@ -1814,7 +1804,7 @@ function ComponentModal({ componentName, T, onClose }) {
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ width: 100, fontSize: 16, fontWeight: 800, color: '#10b981' }}>DATA (OUT)</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>The single-wire digital output. Connect this to an input GPIO pin on your ESP32 (e.g., <strong style={{ color: T.text }}>GPIO 15</strong>).</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>The single-wire digital output. Connect this to an input digital pin on your Arduino Uno (e.g., <strong style={{ color: T.text }}>Pin 7</strong>).</div>
               </div>
             </div>
           </div>
@@ -1859,7 +1849,7 @@ function ComponentModal({ componentName, T, onClose }) {
                 </div>
                 <div style={{ padding: 20, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, flex: 1 }}>
                   <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, margin: 0 }}>
-                    An onboard chip triggers the speaker and then times exactly how many microseconds it takes for the microphone to hear the echo. You use math in your code <strong style={{ color: T.primary }}>(Distance = Time * Speed of Sound)</strong> to convert that delay into centimeters.
+                    An onboard chip triggers the speaker and then times exactly how many microseconds it takes for the microphone to hear the echo. You use math in your code <strong style={{ color: T.primary }}>(Distance = Time * Speed of Sound / 2)</strong> to convert that delay into centimeters.
                   </p>
                 </div>
               </div>
@@ -1874,22 +1864,19 @@ function ComponentModal({ componentName, T, onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12, marginBottom: 40 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ width: 100, fontSize: 16, fontWeight: 800, color: '#ef4444' }}>VCC (5V)</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Power input. This sensor requires 5 Volts to generate a loud enough sound wave. Connect to the <strong style={{ color: T.text }}>VIN (5V)</strong> pin of the ESP32.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Power input. This sensor requires 5 Volts to generate ultrasonic acoustic pings. Connect to the <strong style={{ color: T.text }}>5V</strong> pin of the Arduino Uno.</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: 'rgba(107, 114, 128, 0.1)', color: T.text, borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>GND</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Ground connection. Connect to <strong style={{ color: T.text }}>GND</strong>.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Ground connection. Connect to <strong style={{ color: T.text }}>Arduino Uno GND</strong>.</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>TRIG</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Trigger: Connect to an ESP32 output GPIO. The ESP32 sends a quick HIGH signal here to command the sensor to shout.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Trigger: Connect to an Arduino digital pin (e.g. <strong style={{ color: T.text }}>Pin 12</strong>). The Arduino sends a 10µs HIGH pulse here to command the sensor to ping.</div>
               </div>
-              <div style={{ padding: 16, background: 'rgba(239, 68, 68, 0.1)', border: `1px solid #ef4444`, borderRadius: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-                  <div style={{ width: 100, fontSize: 16, fontWeight: 800, color: '#ef4444' }}>ECHO</div>
-                  <div style={{ padding: '2px 6px', background: '#ef4444', color: '#fff', borderRadius: 4, fontSize: 11, fontWeight: 800 }}>WARNING</div>
-                </div>
-                <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6 }}>Connect to an ESP32 input GPIO. Because the sensor is powered by 5V, the ECHO pin will shoot a 5V signal back to the ESP32. You <strong style={{ color: '#ef4444' }}>MUST</strong> use a voltage divider (two 10k Ohm resistors) to lower this to a safe 2.5V before it reaches the ESP32, or you will damage the microcontroller.</div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
+                <div style={{ width: 100, fontSize: 16, fontWeight: 800, color: T.green }}>ECHO</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Echo: Connect directly to an Arduino digital input pin (e.g. <strong style={{ color: T.text }}>Pin 13</strong>). Because the Arduino Uno is natively 5.0V, it reads the 5V return pulse directly with no voltage dividers needed!</div>
               </div>
             </div>
           </div>
@@ -1939,25 +1926,18 @@ function ComponentModal({ componentName, T, onClose }) {
                 </div>
               </div>
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: T.primaryBg, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
-                <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22v-5"></path><path d="M9 8V2"></path><path d="M15 8V2"></path><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"></path></svg>
-              </div>
-              <h2 style={{ fontSize: 24, fontWeight: 700, color: T.text, margin: 0 }}>Pinout & Wiring</h2>
-            </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12, marginBottom: 40 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: T.primaryBg, color: T.primary, borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>VCC</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Power input. Connect to the <strong style={{ color: T.text }}>3V3 (3.3 Volt)</strong> pin on the ESP32.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Power input. Connect to the <strong style={{ color: T.text }}>5V</strong> pin on the Arduino Uno.</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: 'rgba(107, 114, 128, 0.1)', color: T.text, borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>GND</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Ground connection. Connect to the <strong style={{ color: T.text }}>ESP32 GND</strong>.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Ground connection. Connect to <strong style={{ color: T.text }}>Arduino Uno GND</strong>.</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ width: 100, fontSize: 16, fontWeight: 800, color: '#10b981' }}>OUT (or DO)</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}><strong style={{ color: T.text }}>Digital Output:</strong> Normally sends HIGH (3.3V). When an object reflects light, it snaps to LOW (0V). Wire to any input GPIO.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}><strong style={{ color: T.text }}>Digital Output:</strong> Normally sends HIGH (5.0V). When an object reflects light, it snaps to LOW (0V). Wire to any digital input pin.</div>
               </div>
             </div>
           </div>
@@ -1977,7 +1957,7 @@ function ComponentModal({ componentName, T, onClose }) {
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 12, background: T.primaryBg, color: T.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 16 }}>
-                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="12" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
                   </div>
                   <h2 style={{ fontSize: 20, fontWeight: 700, color: T.text, margin: 0 }}>The Physics</h2>
                 </div>
@@ -1996,7 +1976,7 @@ function ComponentModal({ componentName, T, onClose }) {
                 </div>
                 <div style={{ padding: 20, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, flex: 1 }}>
                   <p style={{ fontSize: 14, color: T.textSub, lineHeight: 1.7, margin: 0 }}>
-                    Just like the IR sensor, this module uses an <strong style={{ color: T.text }}>LM393 chip</strong> and a blue twist-dial to let you set exactly what "dark" means for your specific room.
+                    Just like the IR sensor, this module uses an <strong style={{ color: T.text }}>LM393 comparator</strong> and a blue potentiometer dial to let you calibrate exactly what threshold triggers night mode.
                   </p>
                 </div>
               </div>
@@ -2011,7 +1991,7 @@ function ComponentModal({ componentName, T, onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12, marginBottom: 40 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: T.primaryBg, color: T.primary, borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>VCC</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Power input. Connect to <strong style={{ color: T.text }}>3V3</strong>.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Power input. Connect to Arduino Uno <strong style={{ color: T.text }}>5V</strong>.</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: 'rgba(107, 114, 128, 0.1)', color: T.text, borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>GND</div>
@@ -2023,7 +2003,7 @@ function ComponentModal({ componentName, T, onClose }) {
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>AO</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}><strong style={{ color: T.text }}>Analog Out:</strong> The magic pin. Outputs a variable voltage based on exact brightness. Connect to an ADC pin (like GPIO 34) for precise 0-4095 readings.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}><strong style={{ color: T.text }}>Analog Out:</strong> Outputs a variable 0–5V voltage based on incident lux. Connect to an Arduino 10-bit ADC pin (like <strong style={{ color: T.text }}>Pin A1</strong>) for calibrated 0–1023 readings.</div>
               </div>
             </div>
           </div>
@@ -2063,7 +2043,7 @@ function ComponentModal({ componentName, T, onClose }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 12, marginBottom: 40 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ width: 120, fontSize: 16, fontWeight: 800, color: '#ef4444' }}>Positive (+)</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>The longer leg, or the pin marked with a plus sign. The buzzers in this kit are rated for 5V. To get the loudest sound, this should be powered from the <strong style={{ color: T.text }}>VIN (5V)</strong> rail of the ESP32, not the 3.3V rail.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>The longer leg, or the pin marked with a plus sign. Powered from an Arduino digital or PWM pin (e.g. <strong style={{ color: T.text }}>Pin 11</strong>) or the 5V rail.</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ width: 120, fontSize: 16, fontWeight: 800, color: T.text }}>Negative (-)</div>
@@ -2114,11 +2094,11 @@ function ComponentModal({ componentName, T, onClose }) {
                   <div style={{ width: 140, fontSize: 16, fontWeight: 800, color: '#ef4444' }}>Red (VCC)</div>
                   <div style={{ padding: '2px 6px', background: '#ef4444', color: '#fff', borderRadius: 4, fontSize: 11, fontWeight: 800 }}>CRITICAL</div>
                 </div>
-                <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6 }}>Servos require a massive spike of power to physically move. You <strong style={{ color: '#ef4444' }}>MUST</strong> connect this to the VIN (5V) pin of the ESP32. Connecting it to the 3.3V pin will starve the ESP32 of power and crash your microcontroller.</div>
+                <div style={{ fontSize: 14, color: T.text, lineHeight: 1.6 }}>Servos draw significant current peaks (&gt;500mA during direction reversals). Connect to the <strong style={{ color: T.text }}>5V</strong> power rail, backed by a 100µF decoupling capacitor to prevent ATmega328P brownout resets.</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ width: 140, fontSize: 16, fontWeight: 800, color: '#f59e0b' }}>Orange (Signal)</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Connect to a PWM-capable GPIO pin. Your ESP32 sends a rapid series of electrical pulses down this wire. The specific width of those pulses tells the servo exactly what angle to rotate to.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6, paddingTop: 2 }}>Connect to a PWM-capable digital pin (e.g. <strong style={{ color: T.text }}>Pin 9 or Pin 10</strong>). The Arduino sends 50Hz Pulse Position Modulation (1.0ms–2.0ms) commands via the Servo library.</div>
               </div>
             </div>
           </div>
@@ -2159,11 +2139,11 @@ function ComponentModal({ componentName, T, onClose }) {
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>Breadboard Trick</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>To avoid confusion, always wire your buttons <strong style={{ color: T.text }}>diagonally across the breadboard trench</strong>. Connect the top-left pin to Ground, and the bottom-right pin to your ESP32 GPIO.</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>To avoid confusion, always wire your buttons <strong style={{ color: T.text }}>diagonally across the breadboard trench</strong>. Connect the top-left pin to Ground, and the bottom-right pin to your Arduino digital pin (e.g. Pin 2).</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', padding: 16, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12 }}>
                 <div style={{ padding: '4px 10px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', borderRadius: 6, fontSize: 12, fontWeight: 800, marginRight: 16, minWidth: 70, textAlign: 'center', flexShrink: 0 }}>Software Secret</div>
-                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>To read a button reliably, you configure your ESP32 pin using the code <strong style={{ color: T.text, background: T.primaryBg, padding: '2px 4px', borderRadius: 4 }}>INPUT_PULLUP</strong>. This uses a microscopic resistor inside the ESP32 to keep the pin at 3.3V (HIGH) normally. When you press the button, the electricity drains to Ground, and the pin drops to 0V (LOW).</div>
+                <div style={{ flex: 1, fontSize: 14, color: T.textSub, lineHeight: 1.6 }}>To read a button reliably without external resistors, configure your Arduino pin using <strong style={{ color: T.text, background: T.primaryBg, padding: '2px 4px', borderRadius: 4 }}>pinMode(pin, INPUT_PULLUP)</strong>. This activates the internal 20kΩ–50kΩ pull-up resistor inside the ATmega328P to hold the pin at 5.0V (HIGH) normally. When pressed, current drains to Ground, pulling the pin to 0V (LOW).</div>
               </div>
             </div>
           </div>
@@ -2273,7 +2253,7 @@ function ComponentModal({ componentName, T, onClose }) {
 
             <h2 style={{ fontSize: 24, fontWeight: 700, color: T.primary, marginBottom: 12 }}>The High-Power Bridge</h2>
             <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.8, marginBottom: 24 }}>
-              The Relay is an electromechanical switch. It safely bridges the gap between your delicate, low-power microcontroller (the ESP32) and heavy, high-power devices (like large motors or home appliances).
+              The Relay is an electromechanical switch. It safely bridges the gap between your delicate, low-power microcontroller (the Arduino Uno) and heavy, high-power devices (like large motors or home appliances).
             </p>
 
             <div style={{ marginTop: 40 }}>
@@ -2284,9 +2264,9 @@ function ComponentModal({ componentName, T, onClose }) {
                 <h3 style={{ fontSize: 20, fontWeight: 700, color: T.text, margin: 0 }}>How It Works (The Physics)</h3>
               </div>
               <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.8, marginBottom: 32 }}>
-                Inside the plastic box on the module is an electromagnet (a coil of wire) and a physical metal switch. The ESP32's 3.3V signal alone isn't strong enough to power a heavy device. But when you send a tiny signal to the relay, it powers the electromagnet. The magnet physically pulls the metal switch shut with a satisfying click. The high-power electricity flows entirely through this separated metal switch, meaning the dangerous high voltage never actually touches your ESP32.
+                Inside the plastic box on the module is an electromagnet (a coil of wire) and a physical metal switch. When you send a 5V signal from your Arduino to the relay's control input, it powers the electromagnet. The magnet physically pulls the metal switch shut with a satisfying click. The high-power electricity flows entirely through this separated metal switch, meaning the dangerous high voltage never touches your Arduino Uno.
                 <br /><br />
-                <strong>The Brains of the Module:</strong> Because an electromagnet can cause a harsh backward spike of electricity when turned off, the module includes a built-in transistor to trigger the coil and a "flyback diode" to protect your circuit from any sudden voltage kicks.
+                <strong>The Brains of the Module:</strong> Because an electromagnet coil can cause a harsh inductive kickback when turned off, the module includes a built-in transistor to trigger the coil and a "flyback diode" to protect your circuit from any sudden voltage spikes.
               </p>
             </div>
 
@@ -2299,11 +2279,11 @@ function ComponentModal({ componentName, T, onClose }) {
               </div>
 
               <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: 24, marginBottom: 24 }}>
-                <h4 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12, color: T.primary }}>Low-Voltage Side (ESP32)</h4>
+                <h4 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12, color: T.primary }}>Low-Voltage Side (Arduino Uno)</h4>
                 <ul style={{ paddingLeft: 24, color: T.textSub, lineHeight: 1.8, marginBottom: 24 }}>
-                  <li><strong style={{ color: T.text }}>VCC (or DC+):</strong> Power input for the electromagnet. This MUST be connected to the VIN (5V) rail of the ESP32. If connected to 3.3V, it won't have enough magnetic force to pull the switch shut.</li>
+                  <li><strong style={{ color: T.text }}>VCC (or DC+):</strong> Power input for the electromagnet. Connect this to the 5V power pin of your Arduino Uno.</li>
                   <li><strong style={{ color: T.text }}>GND (or DC-):</strong> Ground connection. Connect to GND.</li>
-                  <li><strong style={{ color: T.text }}>IN:</strong> The signal pin. Connect this to an output GPIO on your ESP32. Sending a signal here triggers the switch. (Note: Many relays are "Active-Low", meaning sending LOW turns it ON).</li>
+                  <li><strong style={{ color: T.text }}>IN:</strong> The signal pin. Connect this to an output digital pin on your Arduino Uno (e.g. Pin 7). Sending a signal here triggers the switch. (Note: Many relays are "Active-Low", meaning sending LOW turns it ON).</li>
                 </ul>
 
                 <h4 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12, color: T.primary }}>High-Voltage Side (Screw Terminals)</h4>
@@ -2362,12 +2342,12 @@ function ComponentModal({ componentName, T, onClose }) {
 
                 <h4 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12, color: '#ef4444' }}>The Hazard</h4>
                 <p style={{ color: T.textSub, lineHeight: 1.8, marginBottom: 24 }}>
-                  A DC motor pulls a large amount of current and creates dangerous voltage spikes (flyback) when it spins down. <strong style={{ color: '#ef4444' }}>NEVER</strong> wire a DC motor directly to your ESP32's delicate GPIO pins.
+                  A DC motor pulls a large amount of current (hundreds of milliamps) and creates dangerous voltage spikes (flyback) when it spins down. <strong style={{ color: '#ef4444' }}>NEVER</strong> wire a DC motor directly to your Arduino's delicate GPIO pins (max 40mA absolute limit!).
                 </p>
 
                 <h4 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12, color: '#10b981' }}>The Solution</h4>
                 <p style={{ color: T.textSub, lineHeight: 1.8 }}>
-                  You must use your <strong style={{ color: T.text }}>BC547 Transistor</strong> or your <strong style={{ color: T.text }}>5V Relay Module</strong> to control the motor safely. Connect the motor to the VIN (5V) power rail and Ground through your transistor or relay switch, and use the ESP32 to simply turn that switch on or off.
+                  You must use your <strong style={{ color: T.text }}>BC547 Transistor</strong> or your <strong style={{ color: T.text }}>5V Relay Module</strong> to control the motor safely. Connect the motor to the 5V power rail and Ground through your transistor or relay switch, and use the Arduino Uno to simply turn that switch on or off.
                 </p>
               </div>
             </div>
@@ -2398,7 +2378,7 @@ function ComponentModal({ componentName, T, onClose }) {
                 <h3 style={{ fontSize: 20, fontWeight: 700, color: T.text, margin: 0 }}>How It Works (The Physics)</h3>
               </div>
               <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.8, marginBottom: 32 }}>
-                Inside a capacitor are two conductive metal plates separated by an insulator (a material that blocks electricity). When power is applied, electrons pile up on one plate, creating an electrical charge. If the main power suddenly drops—like when a heavy servo motor jerks and pulls too much current—the capacitor instantly empties its stored electrons into the circuit to fill the gap and keep your ESP32 from crashing.
+                Inside a capacitor are two conductive metal plates separated by an insulator (a material that blocks electricity). When power is applied, electrons pile up on one plate, creating an electrical charge. If the main power suddenly drops—like when a heavy servo motor jerks and pulls too much current—the capacitor instantly empties its stored electrons into the circuit to fill the gap and keep your Arduino Uno from experiencing brownout resets.
               </p>
             </div>
 
@@ -2463,8 +2443,8 @@ function ComponentModal({ componentName, T, onClose }) {
 
               <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: 24, marginBottom: 24 }}>
                 <ul style={{ paddingLeft: 24, color: T.textSub, lineHeight: 1.8, marginBottom: 24 }}>
-                  <li><strong style={{ color: T.text }}>Outer Pins:</strong> The two outside legs are for power. Connect the left leg to 3V3 and the right leg to Ground (you can actually swap these to reverse the direction the dial works).</li>
-                  <li><strong style={{ color: T.text }}>Middle Pin (Wiper):</strong> This is the output pin that carries the altered voltage. You connect this to an Analog-to-Digital (ADC) pin on your ESP32 so your code can read exactly how far the knob has been twisted.</li>
+                  <li><strong style={{ color: T.text }}>Outer Pins:</strong> The two outside legs are for power. Connect one outer leg to 5V and the other outer leg to Ground (swapping them reverses the direction of the dial).</li>
+                  <li><strong style={{ color: T.text }}>Middle Pin (Wiper):</strong> This is the output pin that carries the altered voltage (0V to 5V). Connect this to an Analog Input pin (A0–A5) on your Arduino Uno so your code can read the 10-bit ADC value (0–1023).</li>
                 </ul>
               </div>
             </div>
@@ -2495,7 +2475,7 @@ function ComponentModal({ componentName, T, onClose }) {
                 <h3 style={{ fontSize: 20, fontWeight: 700, color: T.text, margin: 0 }}>How It Works (The Physics)</h3>
               </div>
               <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.8, marginBottom: 32 }}>
-                The BC547 is an NPN silicon transistor. Think of it as a heavy-duty water pipe with a trap door. Normally, electricity cannot flow down the main pipe (from the Collector to the Emitter). However, if you apply a very tiny electrical current to the side door (the Base), it forces the trap door open, allowing a massive rush of electricity to flow through the main pipe. This allows a delicate 3.3V pin on your ESP32 to safely turn on a heavy 5V motor or a bright light.
+                The BC547 is an NPN silicon transistor. Think of it as a heavy-duty water pipe with a trap door. Normally, electricity cannot flow down the main pipe (from the Collector to the Emitter). However, if you apply a very tiny electrical current to the side door (the Base), it forces the trap door open, allowing a massive rush of electricity to flow through the main pipe. This allows a 5V digital pin on your Arduino Uno to safely switch a high-current motor or external load while protecting the ATmega328P.
               </p>
             </div>
 
@@ -2511,7 +2491,7 @@ function ComponentModal({ componentName, T, onClose }) {
                 <p style={{ color: T.textSub, lineHeight: 1.8, marginBottom: 12 }}>Hold the transistor so the flat side with the text is facing you, and the pins point down:</p>
                 <ul style={{ paddingLeft: 24, color: T.textSub, lineHeight: 1.8, marginBottom: 24 }}>
                   <li><strong style={{ color: T.text }}>Pin 1 (Collector):</strong> The left pin. Connect this to the negative side of the heavy component you want to power (like a buzzer or motor).</li>
-                  <li><strong style={{ color: T.text }}>Pin 2 (Base):</strong> The middle pin. This is the trigger. Connect this to your ESP32 or sensor through a resistor.</li>
+                  <li><strong style={{ color: T.text }}>Pin 2 (Base):</strong> The middle pin. This is the trigger. Connect this to your Arduino digital pin through a 1kΩ current-limiting resistor.</li>
                   <li><strong style={{ color: T.text }}>Pin 3 (Emitter):</strong> The right pin. Connect this directly to Ground to let the heavy current escape.</li>
                 </ul>
               </div>
@@ -2580,7 +2560,7 @@ function ComponentModal({ componentName, T, onClose }) {
 
             <h2 style={{ fontSize: 24, fontWeight: 700, color: T.primary, marginBottom: 12 }}>The Lifeline</h2>
             <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.8, marginBottom: 24 }}>
-              The lifeline of your entire project. It provides raw power and transfers data between your computer and the ESP32.
+              The lifeline of your entire project. It provides raw power and transfers data between your computer and the Arduino Uno R3 SMD.
             </p>
 
             <div style={{ marginTop: 40 }}>
@@ -2591,7 +2571,7 @@ function ComponentModal({ componentName, T, onClose }) {
                 <h3 style={{ fontSize: 20, fontWeight: 700, color: T.text, margin: 0 }}>How It Works (The Physics)</h3>
               </div>
               <p style={{ fontSize: 16, color: T.textSub, lineHeight: 1.8, marginBottom: 32 }}>
-                Inside the thick rubber casing are four separate, tiny wires. Two wires are dedicated entirely to power (carrying 5 Volts and Ground) to wake up the ESP32. The other two wires (Data+ and Data-) carry high-speed electrical pulses. These pulses transfer your compiled C++ code from your computer's hard drive straight into the ESP32's flash memory at thousands of bits per second.
+                Inside the thick rubber casing are four separate, tiny wires. Two wires are dedicated entirely to power (carrying 5 Volts and Ground) to wake up the Arduino Uno. The other two wires (Data+ and Data-) carry serial data through the CH340 USB-UART bridge straight into the ATmega328P's flash memory.
               </p>
             </div>
 
@@ -2605,7 +2585,7 @@ function ComponentModal({ componentName, T, onClose }) {
 
               <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: 12, padding: 24, marginBottom: 24 }}>
                 <p style={{ color: T.textSub, lineHeight: 1.8, marginBottom: 24 }}>
-                  <strong style={{ color: T.text }}>The Connection:</strong> Plug the micro-USB end into the silver port on the ESP32 and the large USB-A end into your computer.
+                  <strong style={{ color: T.text }}>The Connection:</strong> Plug the USB cable (USB Type-B or Type-C depending on your Uno SMD board) into the Arduino port and the large USB-A end into your computer.
                 </p>
                 <h4 style={{ fontSize: 18, fontWeight: 600, marginBottom: 12, color: '#ef4444' }}>The Warning</h4>
                 <p style={{ color: T.textSub, lineHeight: 1.8 }}>
@@ -2637,7 +2617,7 @@ function ComponentModal({ componentName, T, onClose }) {
 function Referral({ T, onClose }) {
   const [name, setName] = useState('');
   const [ok, setOk] = useState(false);
-  const txt = `I just unlocked the Beginners Formula to IoT platform!\n\nThe breadboard visualizer is genuinely something else — hover any row and the hidden copper tracks light up live. Plus there's an AI project builder that spits out full ESP32 code for any IoT idea you throw at it.\n\nbfiot.app\n\n— ${name || 'A curious builder'
+  const txt = `I just unlocked the Beginners Formula to Arduino platform!\n\nThe breadboard visualizer is genuinely something else — hover any row and the hidden copper tracks light up live. Plus there's an AI project builder that spits out full Arduino Uno R3 SMD code for any embedded or robotics idea you throw at it.\n\nbfiot.app\n\n— ${name || 'A curious builder'
     }`;
   const copy = () => {
     const el = document.createElement('textarea');
@@ -2824,7 +2804,7 @@ const EXAMPLES = [
 ];
 
 const LOAD_MSGS = [
-  'Firing up the ESP32 brain...',
+  'Firing up the ATmega328P brain...',
   'Mapping out your circuit...',
   'Writing clean code...',
   'Refining compilation instructions...',
@@ -3086,7 +3066,7 @@ function ProjectLabPage({ T, result, setResult, setHistory }) {
               generate();
             }
           }}
-          placeholder="e.g. I want to build an automated soil tracker with ESP32..."
+          placeholder="e.g. I want to build an autonomous ultrasonic radar station with Arduino Uno..."
           style={{
             width: '100%',
             background: 'transparent',
@@ -3458,7 +3438,7 @@ function ProjectLabPage({ T, result, setResult, setHistory }) {
                   <div
                     style={{ fontSize: 14, fontWeight: 700, color: T.primary }}
                   >
-                    ESP32 Dev Board
+                    Arduino Uno R3 SMD
                   </div>
                   {' '}
                 </div>
@@ -4335,6 +4315,7 @@ export default function App() {
   const [p2, setP2] = useState(true);
   const [p3, setP3] = useState(true);
   const [p4, setP4] = useState(true);
+  const [p5, setP5] = useState(true);
   const [modal, setModal] = useState(false);
   const [k, setK] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -4349,10 +4330,11 @@ export default function App() {
   const [showMobileWarning, setShowMobileWarning] = useState(false);
   const PAGE_ORDER = [
     'gz1', 'gz2', 'gz3', 'gz4', 'gz5',
-    'p1m1', 'p1m2', 'p1m3', 'p1m4', 'p1m5', 'p1cap',
+    'p1m1', 'p1m2', 'p1m3', 'p1m4', 'p1cap',
     'p2m1', 'p2m2', 'p2m3', 'p2m4', 'p2m5', 'p2cap',
-    'p3m1', 'p3m2', 'p3m3', 'p3m4', 'p3cap',
-    'p4m1', 'p4m2', 'p4m3', 'p4cap'
+    'p3m1', 'p3m2', 'p3m3', 'p3m4', 'p3m5', 'p3cap',
+    'p4m1', 'p4m2', 'p4m3', 'p4m4', 'p4cap',
+    'p5m1', 'p5m2', 'p5m3', 'p5cap'
   ];
   const currentPageIndex = PAGE_ORDER.indexOf(page);
   const nextPageId = currentPageIndex !== -1 && currentPageIndex < PAGE_ORDER.length - 1 ? PAGE_ORDER[currentPageIndex + 1] : null;
@@ -4402,31 +4384,36 @@ export default function App() {
     gz4: ['Phase 0', '0.4 · Reading Resistors'],
     gz5: ['Phase 0', '0.5 · The Maker Kit'],
 
-    p1m1: ['Phase 1', 'Module 1.1 · The Physical Handshake'],
-    p1m2: ['Phase 1', 'Module 1.2 · The Analog Bridge'],
-    p1m3: ['Phase 1', 'Module 1.3 · Physical Logic Gates'],
-    p1m4: ['Phase 1', 'Module 1.4 · The Automatic Night Light'],
-    p1m5: ['Phase 1', 'Module 1.5 · Hardware Timers'],
-    p1cap: ['Phase 1', 'Capstone · Vault Alarm'],
+    p1m1: ['Phase 1', 'Day 1 · Arduino Hardware & Digital Outputs'],
+    p1m2: ['Phase 1', 'Day 2 · Digital Inputs & Analog Telemetry'],
+    p1m3: ['Phase 1', 'Day 3 · PWM & Ultrasonic Distance'],
+    p1m4: ['Phase 1', 'Day 4 · Servo & I2C Display'],
+    p1cap: ['Phase 1', 'Day 5 · Autonomous Radar Station'],
 
-    p2m1: ['Phase 2', 'Module 2.1 · Setting Up the IDE'],
-    p2m2: ['Phase 2', 'Module 2.2 · Software Gatekeeper'],
-    p2m3: ['Phase 2', 'Module 2.3 · Digital Inputs'],
-    p2m4: ['Phase 2', 'Module 2.4 · Analog Outputs & PWM'],
-    p2m5: ['Phase 2', 'Module 2.5 · Serial Communication'],
-    p2cap: ['Phase 2', 'Capstone · Thermometer'],
+    p2m1: ['Phase 2', 'Module 2.1 · The Physical Handshake'],
+    p2m2: ['Phase 2', 'Module 2.2 · The Analog Bridge'],
+    p2m3: ['Phase 2', 'Module 2.3 · Physical Logic Gates'],
+    p2m4: ['Phase 2', 'Module 2.4 · The Automatic Night Light'],
+    p2m5: ['Phase 2', 'Module 2.5 · Hardware Timers'],
+    p2cap: ['Phase 2', 'Capstone · Vault Alarm'],
 
-    p3m1: ['Phase 3', 'Module 3.1 · Servos & Motors'],
-    p3m2: ['Phase 3', 'Module 3.2 · OLED Displays'],
-    p3m3: ['Phase 3', 'Module 3.3 · Environmental Sensing'],
-    p3m4: ['Phase 3', 'Module 3.4 · Relay Power Control'],
-    p3cap: ['Phase 3', 'Capstone · Desktop Radar'],
+    p3m1: ['Phase 3', 'Module 3.1 · Setting Up the IDE'],
+    p3m2: ['Phase 3', 'Module 3.2 · Software Gatekeeper'],
+    p3m3: ['Phase 3', 'Module 3.3 · Digital Inputs'],
+    p3m4: ['Phase 3', 'Module 3.4 · Analog Outputs & PWM'],
+    p3m5: ['Phase 3', 'Module 3.5 · Serial Communication'],
+    p3cap: ['Phase 3', 'Capstone · Thermometer'],
 
-    p4m1: ['Phase 4', 'Module 4.1 · High-Voltage Bridge'],
-    p4m2: ['Phase 4', 'Module 4.2 · The Local Hotspot'],
-    p4m3: ['Phase 4', 'Module 4.3 · Two-Way Data'],
-    p4m4: ['Phase 4', 'Module 4.4 · Cloud Dashboard'],
-    p4cap: ['Phase 4', 'Capstone · Smart Home Hub'],
+    p4m1: ['Phase 4', 'Module 4.1 · Servos & Motors'],
+    p4m2: ['Phase 4', 'Module 4.2 · OLED Displays'],
+    p4m3: ['Phase 4', 'Module 4.3 · Environmental Sensing'],
+    p4m4: ['Phase 4', 'Module 4.4 · Relay Power Control'],
+    p4cap: ['Phase 4', 'Capstone · Desktop Radar'],
+
+    p5m1: ['Phase 5', 'Module 5.1 · High-Voltage Bridge'],
+    p5m2: ['Phase 5', 'Module 5.2 · The Local Hotspot'],
+    p5m3: ['Phase 5', 'Module 5.3 · Two-Way Data'],
+    p5cap: ['Phase 5', 'Capstone · Smart Home Hub'],
   }[page] || ['', ''];
 
   // Global auth removed
@@ -4633,9 +4620,67 @@ export default function App() {
           )}
           <div style={{ height: 8 }} />
 
-          {/* Phase 1 */}
+          {/* Phase 1 - The Arduino Cohort */}
           <button
             onClick={() => setP1(!p1)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%',
+              padding: '5px 14px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              marginBottom: 4,
+            }}
+          >
+            <div style={{ textAlign: 'left' }}>
+              <div
+                style={{
+                  fontSize: 9,
+                  color: '#06b6d4',
+                  fontFamily: "'JetBrains Mono',monospace",
+                  letterSpacing: 1.5,
+                  fontWeight: 700,
+                }}
+              >
+                PHASE 1
+              </div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: T.textSub,
+                  marginTop: 1,
+                }}
+              >
+                The Arduino Cohort (GEC Thrissur)
+              </div>
+            </div>
+            <div
+              style={{
+                transform: p1 ? 'rotate(0)' : 'rotate(-90deg)',
+                transition: 'transform 0.2s',
+              }}
+            >
+              <ChevD s={14} c={T.textMuted} />
+            </div>
+          </button>
+          {p1 && (
+            <div style={{ paddingLeft: 2 }}>
+              <LBtn id="p1m1" title="Day 1" tag="Traffic Light Controller" active={page === 'p1m1'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p1m2" title="Day 2" tag="Inputs & Telemetry" active={page === 'p1m2'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p1m3" title="Day 3" tag="PWM & Ultrasonics" active={page === 'p1m3'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p1m4" title="Day 4" tag="Servos & I2C Display" active={page === 'p1m4'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p1cap" title="Day 5" tag="Autonomous Radar" active={page === 'p1cap'} locked={!unlocked} onClick={go} T={T} special />
+            </div>
+          )}
+          <div style={{ height: 8 }} />
+
+          {/* Phase 2 - Pure Hardware */}
+          <button
+            onClick={() => setP2(!p2)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -4658,7 +4703,7 @@ export default function App() {
                   fontWeight: 700,
                 }}
               >
-                PHASE 1
+                PHASE 2
               </div>
               <div
                 style={{
@@ -4673,28 +4718,28 @@ export default function App() {
             </div>
             <div
               style={{
-                transform: p1 ? 'rotate(0)' : 'rotate(-90deg)',
+                transform: p2 ? 'rotate(0)' : 'rotate(-90deg)',
                 transition: 'transform 0.2s',
               }}
             >
               <ChevD s={14} c={T.textMuted} />
             </div>
           </button>
-          {p1 && (
+          {p2 && (
             <div style={{ paddingLeft: 2 }}>
-              <LBtn id="p1m1" title="Module 1.1" tag="Physical Handshake" active={page === 'p1m1'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p1m2" title="Module 1.2" tag="Analog Bridge" active={page === 'p1m2'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p1m3" title="Module 1.3" tag="Logic Gates" active={page === 'p1m3'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p1m4" title="Module 1.4" tag="Auto Night Light" active={page === 'p1m4'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p1m5" title="Module 1.5" tag="Hardware Timers" active={page === 'p1m5'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p1cap" title="Capstone" tag="Vault Alarm" active={page === 'p1cap'} locked={!unlocked} onClick={go} T={T} special />
+              <LBtn id="p2m1" title="Module 2.1" tag="Physical Handshake" active={page === 'p2m1'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p2m2" title="Module 2.2" tag="Analog Bridge" active={page === 'p2m2'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p2m3" title="Module 2.3" tag="Logic Gates" active={page === 'p2m3'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p2m4" title="Module 2.4" tag="Auto Night Light" active={page === 'p2m4'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p2m5" title="Module 2.5" tag="Hardware Timers" active={page === 'p2m5'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p2cap" title="Capstone" tag="Vault Alarm" active={page === 'p2cap'} locked={!unlocked} onClick={go} T={T} special />
             </div>
           )}
           <div style={{ height: 8 }} />
 
-          {/* Phase 2 */}
+          {/* Phase 3 - Software Gatekeeper */}
           <button
-            onClick={() => setP2(!p2)}
+            onClick={() => setP3(!p3)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -4717,7 +4762,7 @@ export default function App() {
                   fontWeight: 700,
                 }}
               >
-                PHASE 2
+                PHASE 3
               </div>
               <div
                 style={{
@@ -4727,33 +4772,33 @@ export default function App() {
                   marginTop: 1,
                 }}
               >
-                Software Gatekeeper
+                Software Gatekeeper & C++
               </div>
             </div>
             <div
               style={{
-                transform: p2 ? 'rotate(0)' : 'rotate(-90deg)',
+                transform: p3 ? 'rotate(0)' : 'rotate(-90deg)',
                 transition: 'transform 0.2s',
               }}
             >
               <ChevD s={14} c={T.textMuted} />
             </div>
           </button>
-          {p2 && (
+          {p3 && (
             <div style={{ paddingLeft: 2 }}>
-              <LBtn id="p2m1" title="Module 2.1" tag="Setting Up the IDE" active={page === 'p2m1'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p2m2" title="Module 2.2" tag="Software Gatekeeper" active={page === 'p2m2'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p2m3" title="Module 2.3" tag="Digital Inputs" active={page === 'p2m3'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p2m4" title="Module 2.4" tag="Analog Outputs" active={page === 'p2m4'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p2m5" title="Module 2.5" tag="Serial Comm" active={page === 'p2m5'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p2cap" title="Capstone" tag="Thermometer" active={page === 'p2cap'} locked={!unlocked} onClick={go} T={T} special />
+              <LBtn id="p3m1" title="Module 3.1" tag="Setting Up the IDE" active={page === 'p3m1'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p3m2" title="Module 3.2" tag="Software Gatekeeper" active={page === 'p3m2'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p3m3" title="Module 3.3" tag="Digital Inputs" active={page === 'p3m3'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p3m4" title="Module 3.4" tag="Analog Outputs" active={page === 'p3m4'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p3m5" title="Module 3.5" tag="Serial Comm" active={page === 'p3m5'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p3cap" title="Capstone" tag="Thermometer" active={page === 'p3cap'} locked={!unlocked} onClick={go} T={T} special />
             </div>
           )}
           <div style={{ height: 8 }} />
 
-          {/* Phase 3 */}
+          {/* Phase 4 - Actuators & Sensors */}
           <button
-            onClick={() => setP3(!p3)}
+            onClick={() => setP4(!p4)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -4776,7 +4821,7 @@ export default function App() {
                   fontWeight: 700,
                 }}
               >
-                PHASE 3
+                PHASE 4
               </div>
               <div
                 style={{
@@ -4786,32 +4831,32 @@ export default function App() {
                   marginTop: 1,
                 }}
               >
-                Analog & Real World
+                Actuators & Real-World Sensors
               </div>
             </div>
             <div
               style={{
-                transform: p3 ? 'rotate(0)' : 'rotate(-90deg)',
+                transform: p4 ? 'rotate(0)' : 'rotate(-90deg)',
                 transition: 'transform 0.2s',
               }}
             >
               <ChevD s={14} c={T.textMuted} />
             </div>
           </button>
-          {p3 && (
+          {p4 && (
             <div style={{ paddingLeft: 2 }}>
-              <LBtn id="p3m1" title="Module 3.1" tag="Servos & Motors" active={page === 'p3m1'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p3m2" title="Module 3.2" tag="OLED Displays" active={page === 'p3m2'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p3m3" title="Module 3.3" tag="Env. Sensing" active={page === 'p3m3'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p3m4" title="Module 3.4" tag="Relay Power" active={page === 'p3m4'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p3cap" title="Capstone" tag="Desktop Radar" active={page === 'p3cap'} locked={!unlocked} onClick={go} T={T} special />
+              <LBtn id="p4m1" title="Module 4.1" tag="Servos & Motors" active={page === 'p4m1'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p4m2" title="Module 4.2" tag="OLED Displays" active={page === 'p4m2'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p4m3" title="Module 4.3" tag="Env. Sensing" active={page === 'p4m3'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p4m4" title="Module 4.4" tag="Relay Power" active={page === 'p4m4'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p4cap" title="Capstone" tag="Desktop Radar" active={page === 'p4cap'} locked={!unlocked} onClick={go} T={T} special />
             </div>
           )}
           <div style={{ height: 8 }} />
 
-          {/* Phase 4 */}
+          {/* Phase 5 - High-Voltage & Advanced Systems */}
           <button
-            onClick={() => setP4(!p4)}
+            onClick={() => setP5(!p5)}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -4834,7 +4879,7 @@ export default function App() {
                   fontWeight: 700,
                 }}
               >
-                PHASE 4
+                PHASE 5
               </div>
               <div
                 style={{
@@ -4844,24 +4889,24 @@ export default function App() {
                   marginTop: 1,
                 }}
               >
-                Connected IoT
+                High-Voltage & Advanced Systems
               </div>
             </div>
             <div
               style={{
-                transform: p4 ? 'rotate(0)' : 'rotate(-90deg)',
+                transform: p5 ? 'rotate(0)' : 'rotate(-90deg)',
                 transition: 'transform 0.2s',
               }}
             >
               <ChevD s={14} c={T.textMuted} />
             </div>
           </button>
-          {p4 && (
+          {p5 && (
             <div style={{ paddingLeft: 2 }}>
-              <LBtn id="p4m1" title="Module 4.1" tag="High-Voltage Bridge" active={page === 'p4m1'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p4m2" title="Module 4.2" tag="The Local Hotspot" active={page === 'p4m2'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p4m3" title="Module 4.3" tag="Two-Way Data" active={page === 'p4m3'} locked={!unlocked} onClick={go} T={T} />
-              <LBtn id="p4cap" title="Capstone" tag="Smart Home Hub" active={page === 'p4cap'} locked={!unlocked} onClick={go} T={T} special />
+              <LBtn id="p5m1" title="Module 5.1" tag="High-Voltage Bridge" active={page === 'p5m1'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p5m2" title="Module 5.2" tag="The Local Hotspot" active={page === 'p5m2'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p5m3" title="Module 5.3" tag="Two-Way Data" active={page === 'p5m3'} locked={!unlocked} onClick={go} T={T} />
+              <LBtn id="p5cap" title="Capstone" tag="Smart Home Hub" active={page === 'p5cap'} locked={!unlocked} onClick={go} T={T} special />
             </div>
           )}
           {/* Maker's Log persistence timeline */}         {' '}
@@ -4964,7 +5009,7 @@ export default function App() {
             <LBtn
               id="lab"
               title="Project Builder"
-              tag="Context-Aware · ESP32"
+              tag="Context-Aware · Uno R3 SMD"
               active={page === 'lab'}
               locked={false}
               onClick={go}
@@ -5304,7 +5349,7 @@ export default function App() {
                         unit: 'Volts',
                         color: T.primary,
                         simple: 'the push',
-                        desc: `The water pressure. Our ESP32 provides 3.3V pressure. It’s gentle enough that you can't even feel it.`,
+                        desc: `The water pressure. Our Arduino Uno R3 SMD provides 5.0V pressure (with an auxiliary 3.3V rail). It's gentle and touch-safe.`,
                       },
                       {
                         sym: 'I',
@@ -5904,7 +5949,7 @@ export default function App() {
                             {
                               dot: T.green,
                               label: 'LONG LEG (+) — Anode',
-                              desc: 'Faces your power source or the ESP32 GPIO pin.',
+                              desc: 'Faces your power source or the Arduino digital pin.',
                             },
                             {
                               dot: T.red,
@@ -6235,9 +6280,9 @@ export default function App() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16, marginBottom: 52 }}>
                   {[
-                    { n: 'ESP32 Development Board', icon: '🧠', img: 'https://5.imimg.com/data5/SELLER/Default/2024/5/415247702/WU/WQ/YV/60596912/esp-32-development-board-with-wifi-and-bluetooth.jpg', d: 'The brain of the operation. Contains a dual-core processor, Wi-Fi, and Bluetooth. It runs your code and controls everything else.' },
+                    { n: 'Arduino Uno R3 SMD', icon: '🧠', img: 'https://m.media-amazon.com/images/I/61t0o6N8yBL._SL1100_.jpg', d: 'The central processing brain. Powered by the ATmega328P microcontroller with 14 digital I/O pins, 6 analog inputs, 16MHz clock, USB connection, and robust 5V logic. It runs your compiled C++ sketches and orchestrates your entire hardware station.' },
                     { n: 'Breadboard', icon: '🧲', img: 'https://robocraze.com/cdn/shop/products/2_GL12_840_Points_Breadboard.png?v=1743775778', d: 'The prototyping base. Allows you to connect components together without any soldering using internal metal clips.' },
-                    { n: 'Jumper Wires', icon: '🔌', img: 'https://robocraze.com/cdn/shop/files/3_Male_to_Female_Jumper_Wires_20cm_20pcs_1000x.png?v=1758691490', d: 'The circulatory system. These carry voltage and signals between your ESP32 and your components.' },
+                    { n: 'Jumper Wires', icon: '🔌', img: 'https://robocraze.com/cdn/shop/files/3_Male_to_Female_Jumper_Wires_20cm_20pcs_1000x.png?v=1758691490', d: 'The circulatory system. These carry 5V power, ground, and digital signals between your Arduino Uno and breadboard components.' },
                     { n: '0.96" OLED Display', icon: '📺', img: 'https://i.ibb.co/FkDrwpqd/Untitled-design-3.png', d: 'A tiny, crisp screen that uses I2C communication. Perfect for showing sensor data or debugging information directly on the hardware.' },
                     { n: 'DHT11 Sensor', icon: '🌡️', img: 'https://auhbsvzkkblo2s0k.public.blob.vercel-storage.com/DHT11_Humidity_Temperature_Sensor_Module_1000x.jpg', d: 'A digital sensor that measures ambient temperature and humidity. Great for weather stations.' },
                     { n: 'Ultrasonic Sensor (HC-SR04)', icon: '🦇', img: 'https://spare3d.in/wp-content/uploads/2017/06/Spare3d_ultrasonic_sensor_hc_sr04.jpg', d: 'Acts like bat echolocation. It sends out an ultrasonic ping and measures how long it takes to bounce back, calculating distance.' },
@@ -6245,16 +6290,16 @@ export default function App() {
                     { n: 'LDR (Light Sensor)', icon: '☀️', img: 'https://www.sunrobotics.in/cdn/shop/files/LDR-module-1_60b4d653-45a9-4e6f-83f5-d8877c29bbcb_1920x.png?v=1746160216', d: 'A Light Dependent Resistor. Its resistance changes based on how much light hits its face.' },
                     { n: 'Active Buzzer', icon: '🔊', img: 'https://robu.in/_next/image/?url=https%3A%2F%2Frobu-prod-media.s3.ap-south-1.amazonaws.com%2Fuploads%2F2024%2F10%2FActive-Buzzer.png&w=1920&q=90', d: 'A simple speaker that emits a loud beep when provided with power. Great for alarms.' },
                     { n: 'SG90 Servo Motor', icon: '🦾', img: 'https://store.moonpreneur.com/cdn/shop/files/servo_800x1026_crop_center@2x.jpg?v=1744700803', d: 'A precise motor that can rotate to specific angles (0-180 degrees) based on PWM signals.' },
-                    { n: '5V Single Channel Relay', icon: '⚡', img: 'https://5.imimg.com/data5/SELLER/Default/2020/11/FK/WK/OH/15458098/5v-relay-module-500x500.jpg', d: 'An electromechanical switch. It allows your delicate, low-voltage ESP32 to safely control high-power devices by using an internal electromagnet.' },
+                    { n: '5V Single Channel Relay', icon: '⚡', img: 'https://5.imimg.com/data5/SELLER/Default/2020/11/FK/WK/OH/15458098/5v-relay-module-500x500.jpg', d: 'An electromechanical switch. Allows the Arduino to safely control high-power external devices by energizing an internal electromagnet isolated from the microcontroller.' },
                     { n: 'DC Motor with Fan Blade', icon: '🌀', img: 'https://i.ibb.co/Ps6kdgvy/file-00000000b07071fab5951d676892daaa.png', d: 'A continuous rotation motor paired with a plastic propeller. It turns electrical energy into physical motion and aerodynamic thrust, perfect for automated cooling fans.' },
                     { n: 'Push Buttons', icon: '🔘', img: 'https://projectpoint.in/image/cache/catalog/button_12mm-800x800.jpg', d: 'Simple tactile switches that close a circuit when pressed, used for user input.' },
                     { n: 'LEDs', icon: '💡', img: 'https://dynokart.in/wp-content/uploads/2018/08/3mm-led-1.jpg', d: 'Light Emitting Diodes. They turn electrical current into light. Always use them with a resistor!' },
                     { n: 'Resistors', icon: '🛑', img: 'https://5.imimg.com/data5/SELLER/Default/2023/12/369621363/DH/RH/UO/21085075/resistors-th-and-smd.jpg', d: 'They restrict the flow of current. Essential for protecting delicate components like LEDs from receiving too much power.' },
                     { n: 'Capacitors', icon: '🔋', img: 'https://i.ibb.co/VcwYXGcq/file-0000000008687208ae5bb40738f77c57.png', d: 'They act like tiny, lightning-fast batteries. They store and release electrical energy quickly to smooth out power drops and keep your circuits stable.' },
                     { n: 'Potentiometer', icon: '🎛️', img: 'https://robodo.in/cdn/shop/products/51mNAteWA9L.jpg?v=1672847436', d: 'An adjustable twist-knob resistor. Turn the dial to smoothly increase or decrease the voltage flowing through your circuit, exactly like a volume knob on a speaker.' },
-                    { n: 'BC547 transistors', icon: '🔀', img: 'https://etechrobot.com/wp-content/uploads/2025/11/BC547-Transistor-300x300.png', d: 'The electronic muscle of your kit. It acts as a digital switch, allowing a tiny, weak signal from your ESP32 to safely control high-power devices like motors.' },
+                    { n: 'BC547 transistors', icon: '🔀', img: 'https://etechrobot.com/wp-content/uploads/2025/11/BC547-Transistor-300x300.png', d: 'The electronic muscle of your kit. It acts as a digital switch, allowing a tiny, weak signal from an Arduino pin to safely control heavy loads like motors or lamps.' },
                     { n: '555 Timer IC', icon: '⏱️', img: 'https://probots.co.in/pub/media/catalog/product/cache/d8ddd0f9b0cd008b57085cd218b48832/5/5/555_lrg.jpg', d: 'A legendary microchip that acts as a heartbeat for your circuit. It creates perfect timing pulses to blink lights or make sirens without needing any code.' },
-                    { n: 'USB Cable', icon: '🔌', img: 'https://rukmini1.flixcart.com/image/1500/1500/xif0q/data-cable/micro-usb-cable/7/9/l/15w-micro-usb-cable-for-super-fast-charge-treams-original-imahgmeeq4ttrahz.jpeg?q=70', d: 'The lifeline of your project. It provides raw power to your board and transfers your compiled code from your computer straight into the ESP32\'s memory.' }
+                    { n: 'USB Cable', icon: '🔌', img: 'https://rukmini1.flixcart.com/image/1500/1500/xif0q/data-cable/micro-usb-cable/7/9/l/15w-micro-usb-cable-for-super-fast-charge-treams-original-imahgmeeq4ttrahz.jpeg?q=70', d: 'The lifeline of your project. It provides raw 5V power to your board and transfers your compiled code straight into the ATmega328P\'s flash memory.' }
                   ].map(item => (
                     <div key={item.n} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: 20, display: 'flex', flexDirection: 'column' }}>
                       <div style={{ width: '100%', aspectRatio: '1/1', background: T.primaryBg, borderRadius: 8, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -6318,7 +6363,7 @@ export default function App() {
                     </div>
                     {' '}
                     <p style={{ fontSize: 14, color: T.textSub }}>
-                      Module 1 is where we plug things in for the first time.
+                      Phase 1 is where we begin hands-on Arduino Uno R3 SMD physical computing and mechatronics.
                     </p>
                     {' '}
                   </div>
@@ -6336,7 +6381,7 @@ export default function App() {
                       flexShrink: 0,
                     }}
                   >
-                    Module 1 →
+                    Start Day 1: Traffic Light Controller →
                   </button>
                   {' '}
                 </div>
@@ -7024,7 +7069,8 @@ export default function App() {
                   {' '}
                   <div
                     style={{
-                      flex: '0 0 320px',
+                      flex: '1 1 380px',
+                      maxWidth: '460px',
                       position: 'sticky',
                       top: 24,
                       width: '100%',
