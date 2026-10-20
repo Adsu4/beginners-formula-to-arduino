@@ -3641,7 +3641,7 @@ function ProjectLabPage({ T, result, setResult, setHistory }) {
                               {s.title}
                             </div>
                             {' '}
-                            <p
+                            <div
                               style={{
                                 fontSize: 13.5,
                                 color: T.textSub,
@@ -6628,7 +6628,7 @@ export default function App() {
                                   {s.title}
                                 </div>
                                 {' '}
-                                <p
+                                <div
                                   style={{
                                     fontSize: 13.5,
                                     color: T.textSub,
@@ -6980,7 +6980,7 @@ export default function App() {
                             🧠 LOGIC BREAKDOWN
                           </div>
                           {' '}
-                          <p
+                          <div
                             style={{
                               fontSize: 14,
                               color: T.textSub,
@@ -6999,7 +6999,7 @@ export default function App() {
                             ) : (
                               activeLesson.code.breakdown
                             )}
-                          </p>
+                          </div>
                           {' '}
                         </div>
                         {' '}
