@@ -4306,7 +4306,7 @@ const LINFO = {
 };
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('bfiot_auth') === 'true');
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [dark, setDark] = useState(false);
   const T = dark ? DARK : LIGHT;
   const [p0, setP0] = useState(true);
@@ -6478,6 +6478,65 @@ export default function App() {
                       </p>
                       {' '}
                     </div>
+                    {/* Key Formulas & Principles Section */}
+                    {activeLesson.keyFormulas && activeLesson.keyFormulas.length > 0 && (
+                      <div style={{ marginBottom: 32 }}>
+                        <h3
+                          style={{
+                            fontSize: 18,
+                            fontWeight: 700,
+                            color: T.text,
+                            marginBottom: 12,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                          }}
+                        >
+                          <span>📐</span> Key Engineering Formulas & Principles
+                        </h3>
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                            gap: 12,
+                          }}
+                        >
+                          {activeLesson.keyFormulas.map((f, i) => (
+                            <div
+                              key={i}
+                              style={{
+                                background: T.surfaceAlt,
+                                border: `1px solid ${T.border}`,
+                                borderRadius: 10,
+                                padding: '14px 16px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 6,
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: 6 }}>
+                                <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{f.name}</span>
+                                <span
+                                  style={{
+                                    fontFamily: "'JetBrains Mono', monospace",
+                                    fontSize: 12,
+                                    fontWeight: 800,
+                                    color: T.primary,
+                                    background: T.primaryBg,
+                                    padding: '2px 8px',
+                                    borderRadius: 4,
+                                    border: `1px solid ${T.primaryBorder}`,
+                                  }}
+                                >
+                                  {f.formula}
+                                </span>
+                              </div>
+                              <p style={{ fontSize: 12.5, color: T.textSub, lineHeight: 1.6, margin: 0 }}>{f.desc}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     {/* Supplies Section */}
                     {' '}
                     <h3
@@ -6557,6 +6616,76 @@ export default function App() {
                       ))}
                       {' '}
                     </Cd>
+                    {/* Breadboard Connection Map Section */}
+                    {activeLesson.wiringMap && activeLesson.wiringMap.length > 0 && (
+                      <div style={{ marginBottom: 32 }}>
+                        <h3
+                          style={{
+                            fontSize: 18,
+                            fontWeight: 700,
+                            color: T.text,
+                            marginBottom: 12,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                          }}
+                        >
+                          <span>🔌</span> Point-to-Point Breadboard Connection Map
+                        </h3>
+                        <Cd T={T} style={{ overflow: 'hidden' }}>
+                          <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, textAlign: 'left' }}>
+                              <thead>
+                                <tr
+                                  style={{
+                                    background: T.surfaceAlt,
+                                    borderBottom: `1px solid ${T.border}`,
+                                    color: T.textMuted,
+                                    fontFamily: "'JetBrains Mono', monospace",
+                                    fontSize: 10.5,
+                                  }}
+                                >
+                                  <th style={{ padding: '10px 14px' }}>ARDUINO PIN</th>
+                                  <th style={{ padding: '10px 14px' }}>BREADBOARD TIE-POINT</th>
+                                  <th style={{ padding: '10px 14px' }}>COMPONENT PIN</th>
+                                  <th style={{ padding: '10px 14px' }}>WIRE / PATH</th>
+                                  <th style={{ padding: '10px 14px' }}>ELECTRICAL NOTES</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {activeLesson.wiringMap.map((w, idx) => (
+                                  <tr
+                                    key={idx}
+                                    style={{
+                                      borderBottom:
+                                        idx < activeLesson.wiringMap.length - 1
+                                          ? `1px solid ${T.border}`
+                                          : 'none',
+                                    }}
+                                  >
+                                    <td
+                                      style={{
+                                        padding: '10px 14px',
+                                        fontWeight: 700,
+                                        color: T.primary,
+                                        fontFamily: "'JetBrains Mono', monospace",
+                                        whiteSpace: 'nowrap',
+                                      }}
+                                    >
+                                      {w.pin}
+                                    </td>
+                                    <td style={{ padding: '10px 14px', color: T.text, fontWeight: 600 }}>{w.tiePoint}</td>
+                                    <td style={{ padding: '10px 14px', color: T.text }}>{w.component}</td>
+                                    <td style={{ padding: '10px 14px', color: T.textSub }}>{w.wire}</td>
+                                    <td style={{ padding: '10px 14px', color: T.textMuted, fontSize: 12 }}>{w.notes}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </Cd>
+                      </div>
+                    )}
                     {/* Build Steps Section */}
                     {' '}
                     <h3
@@ -7037,6 +7166,66 @@ export default function App() {
                       </div>
                     )}
                     {' '}
+                    {/* Take-Home Mechatronics Challenge Section */}
+                    {activeLesson.takeHomeChallenge && (
+                      <div
+                        style={{
+                          background: `linear-gradient(135deg, ${T.surfaceAlt}, ${T.primaryBg})`,
+                          border: `1px solid ${T.primaryBorder}`,
+                          borderRadius: 14,
+                          padding: 24,
+                          marginBottom: 32,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                          <span style={{ fontSize: 20 }}>🚀</span>
+                          <h3 style={{ fontSize: 16, fontWeight: 800, color: T.text, margin: 0 }}>
+                            Take-Home Engineering Challenge: {activeLesson.takeHomeChallenge.title}
+                          </h3>
+                        </div>
+                        <p style={{ fontSize: 13.5, color: T.textSub, lineHeight: 1.7, marginBottom: 14 }}>
+                          {activeLesson.takeHomeChallenge.objective}
+                        </p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                          {activeLesson.takeHomeChallenge.tasks.map((task, tidx) => (
+                            <div key={tidx} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                              <span
+                                style={{
+                                  background: T.primary,
+                                  color: '#ffffff',
+                                  fontSize: 10,
+                                  fontWeight: 800,
+                                  padding: '2px 8px',
+                                  borderRadius: 4,
+                                  fontFamily: "'JetBrains Mono'",
+                                  whiteSpace: 'nowrap',
+                                  marginTop: 1,
+                                }}
+                              >
+                                Task {tidx + 1}
+                              </span>
+                              <span style={{ fontSize: 13, color: T.text, lineHeight: 1.6 }}>{task}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {activeLesson.takeHomeChallenge.hint && (
+                          <div
+                            style={{
+                              background: T.surface,
+                              border: `1px dashed ${T.primaryBorder}`,
+                              borderRadius: 8,
+                              padding: '10px 14px',
+                              fontSize: 12,
+                              color: T.textSub,
+                            }}
+                          >
+                            <strong style={{ color: T.primary }}>💡 Engineering Hint: </strong>
+                            {activeLesson.takeHomeChallenge.hint}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {' '}
                     {nextPageId && (
                       <div style={{ marginTop: 40, borderTop: `1px solid ${T.border}`, paddingTop: 32, display: 'flex', justifyContent: 'flex-end' }}>
                         <button
@@ -7070,7 +7259,7 @@ export default function App() {
                   <div
                     style={{
                       flex: '1 1 380px',
-                      maxWidth: '460px',
+                      maxWidth: '480px',
                       position: 'sticky',
                       top: 24,
                       width: '100%',

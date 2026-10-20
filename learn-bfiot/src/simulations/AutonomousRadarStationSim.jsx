@@ -1,10 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 export default function AutonomousRadarStationSim({ T }) {
+  // Tab switcher: 'radar', 'targets', 'telemetry', 'wiring'
+  const [activeTab, setActiveTab] = useState('radar');
+
   // Radar Sweep Angle (15 deg to 165 deg)
   const [angle, setAngle] = useState(90);
   const [sweepDirection, setSweepDirection] = useState(1);
   const [isScanning, setIsScanning] = useState(true);
+  const [sweepSpeedMs, setSweepSpeedMs] = useState(35); // 20ms, 35ms, 60ms
+  const [sweepStepDeg, setSweepStepDeg] = useState(2); // 1, 2, 3 deg
 
   // Targets in the radar field: array of { id, angle, distance }
   const [targets, setTargets] = useState([
@@ -12,12 +17,25 @@ export default function AutonomousRadarStationSim({ T }) {
     { id: 2, angle: 120, distance: 18 },
   ]);
 
+  // Target Editor inputs
+  const [newTargetAngle, setNewTargetAngle] = useState(90);
+  const [newTargetDist, setNewTargetDist] = useState(20);
+
   // Detected point history for radar persistence: array of { angle, distance, timestamp }
   const [blips, setBlips] = useState([]);
 
   // Telemetry string
   const [currentDistance, setCurrentDistance] = useState(null);
   const [alarmState, setAlarmState] = useState('NORMAL'); // 'NORMAL', 'CAUTION', 'ALARM'
+  const [telemetryLogs, setTelemetryLogs] = useState([
+    '45,28',
+    '47,28',
+    '88,400',
+    '90,400',
+    '118,18',
+    '120,18',
+  ]);
+  const [copiedTelemetry, setCopiedTelemetry] = useState(false);
 
   // Decoupling capacitor toggle (educational feature)
   const [decouplingCapacitor, setDecouplingCapacitor] = useState(true);
@@ -32,7 +50,7 @@ export default function AutonomousRadarStationSim({ T }) {
 
     const interval = setInterval(() => {
       setAngle((prevAngle) => {
-        let nextAngle = prevAngle + sweepDirection * 2;
+        let nextAngle = prevAngle + sweepDirection * sweepStepDeg;
         if (nextAngle >= 165) {
           nextAngle = 165;
           setSweepDirection(-1);
@@ -41,14 +59,16 @@ export default function AutonomousRadarStationSim({ T }) {
           setSweepDirection(1);
         }
 
-        // Check if any target is near the current angle (+/- 3 degrees)
-        const hit = targets.find((t) => Math.abs(t.angle - nextAngle) <= 3);
+        // Check if any target is near the current angle (+/- 4 degrees)
+        const hit = targets.find((t) => Math.abs(t.angle - nextAngle) <= 4);
         if (hit) {
           setCurrentDistance(hit.distance);
           setBlips((prev) => [
-            ...prev.slice(-25),
+            ...prev.slice(-30),
             { angle: nextAngle, distance: hit.distance, timestamp: Date.now() },
           ]);
+
+          setTelemetryLogs((prev) => [...prev.slice(-25), `${nextAngle},${hit.distance}`]);
 
           if (hit.distance < 15) {
             setAlarmState('ALARM');
@@ -60,6 +80,9 @@ export default function AutonomousRadarStationSim({ T }) {
         } else {
           setCurrentDistance(null);
           setAlarmState('NORMAL');
+          if (Math.random() < 0.25) {
+            setTelemetryLogs((prev) => [...prev.slice(-25), `${nextAngle},400`]);
+          }
         }
 
         // Simulate brownout if decoupling capacitor is removed
@@ -70,10 +93,10 @@ export default function AutonomousRadarStationSim({ T }) {
 
         return nextAngle;
       });
-    }, 45);
+    }, sweepSpeedMs);
 
     return () => clearInterval(interval);
-  }, [isScanning, sweepDirection, targets, decouplingCapacitor]);
+  }, [isScanning, sweepDirection, targets, decouplingCapacitor, sweepSpeedMs, sweepStepDeg]);
 
   // Render Radar Canvas
   useEffect(() => {
@@ -83,8 +106,8 @@ export default function AutonomousRadarStationSim({ T }) {
     const width = canvas.width;
     const height = canvas.height;
     const cx = width / 2;
-    const cy = height - 15;
-    const radius = Math.min(cx - 15, cy - 15);
+    const cy = height - 12;
+    const radius = Math.min(cx - 12, cy - 12);
 
     ctx.clearRect(0, 0, width, height);
 
@@ -160,212 +183,474 @@ export default function AutonomousRadarStationSim({ T }) {
     const sweepX = cx - radius * Math.cos(currentRad);
     const sweepY = cy - radius * Math.sin(currentRad);
 
-    const gradient = ctx.createLinearGradient(cx, cy, sweepX, sweepY);
-    gradient.addColorStop(0, '#22c55e');
-    gradient.addColorStop(1, '#86efac');
+    const grad = ctx.createLinearGradient(cx, cy, sweepX, sweepY);
+    grad.addColorStop(0, '#22c55e');
+    grad.addColorStop(1, '#86efac');
 
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(sweepX, sweepY);
-    ctx.strokeStyle = gradient;
+    ctx.strokeStyle = grad;
     ctx.lineWidth = 2;
     ctx.stroke();
+
+    // Center Origin Dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#22c55e';
+    ctx.fill();
   }, [angle, blips]);
 
-  // Click canvas to drop or move a target
-  const handleCanvasClick = (e) => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const cx = canvas.width / 2;
-    const cy = canvas.height - 15;
-
-    const dx = cx - x;
-    const dy = cy - y;
-    if (dy < 0) return; // Below baseline
-
-    const distPixels = Math.sqrt(dx * dx + dy * dy);
-    const radius = Math.min(cx - 15, cy - 15);
-    const distance = Math.min(40, Math.max(5, Math.round((distPixels / radius) * 40)));
-
-    let angleRad = Math.atan2(dy, dx);
-    let clickAngle = Math.round((angleRad * 180) / Math.PI);
-    if (clickAngle < 15) clickAngle = 15;
-    if (clickAngle > 165) clickAngle = 165;
-
+  // Target Editor Add Target
+  const addTarget = () => {
     setTargets((prev) => [
-      ...prev.slice(-3),
-      { id: Date.now(), angle: clickAngle, distance },
+      ...prev,
+      { id: Date.now(), angle: newTargetAngle, distance: newTargetDist },
     ]);
   };
 
+  const removeTarget = (id) => {
+    setTargets((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  // Convert polar to cartesian
+  const cartX = (newTargetDist * Math.cos((newTargetAngle * Math.PI) / 180)).toFixed(1);
+  const cartY = (newTargetDist * Math.sin((newTargetAngle * Math.PI) / 180)).toFixed(1);
+
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
-      {/* Title & Sweep Toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>
-          Autonomous Radar Station
-        </span>
-        <div style={{ display: 'flex', gap: 6 }}>
+      {/* Navigation Tabs */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: 3,
+          background: T.surfaceAlt,
+          padding: 3,
+          borderRadius: 8,
+          border: `1px solid ${T.border}`,
+        }}
+      >
+        {[
+          { id: 'radar', label: '🎯 Scope' },
+          { id: 'targets', label: '📍 Targets' },
+          { id: 'telemetry', label: '📊 Stream' },
+          { id: 'wiring', label: '🔌 Pinout' },
+        ].map((t) => (
           <button
-            onClick={() => setIsScanning(!isScanning)}
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
             style={{
-              background: isScanning ? T.greenBg : T.surfaceAlt,
-              color: isScanning ? T.green : T.textSub,
-              border: `1px solid ${isScanning ? T.greenBorder : T.border}`,
+              background: activeTab === t.id ? T.primary : 'transparent',
+              color: activeTab === t.id ? '#ffffff' : T.textSub,
+              border: 'none',
               borderRadius: 6,
-              padding: '3px 8px',
+              padding: '6px 2px',
               fontSize: 10,
               fontWeight: 700,
               cursor: 'pointer',
+              transition: 'all 0.15s ease',
             }}
           >
-            {isScanning ? '⏸ Pause' : '▶ Sweep'}
+            {t.label}
           </button>
-          <button
-            onClick={() => setTargets([])}
-            style={{
-              background: T.surfaceAlt,
-              color: T.textSub,
-              border: `1px solid ${T.border}`,
-              borderRadius: 6,
-              padding: '3px 8px',
-              fontSize: 10,
-              cursor: 'pointer',
-            }}
-          >
-            Clear
-          </button>
-        </div>
+        ))}
       </div>
 
-      {/* Brownout alert warning */}
-      {brownoutWarning && (
-        <div
-          style={{
-            background: 'rgba(239, 68, 68, 0.15)',
-            border: '1px solid #ef4444',
-            borderRadius: 6,
-            padding: '6px 10px',
-            color: '#ef4444',
-            fontSize: 10.5,
-            fontWeight: 700,
-          }}
-        >
-          ⚡ BROWNOUT RESET! Servo surge dropped VCC &lt;4.3V! Connect 100μF cap.
+      {/* ── TAB 1: 180° POLAR RADAR SCOPE ── */}
+      {activeTab === 'radar' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Header & Scanning Toggle */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: isScanning ? '#10b981' : '#f59e0b',
+                }}
+              />
+              <span style={{ fontSize: 12, fontWeight: 700, color: T.text }}>
+                180° Autonomous Radar Scope
+              </span>
+            </div>
+
+            <button
+              onClick={() => setIsScanning(!isScanning)}
+              style={{
+                background: isScanning ? T.primary : T.surfaceAlt,
+                color: isScanning ? '#ffffff' : T.textSub,
+                border: `1px solid ${isScanning ? T.primary : T.border}`,
+                borderRadius: 6,
+                padding: '4px 8px',
+                fontSize: 10,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {isScanning ? '❚❚ Pause' : '▶ Scan'}
+            </button>
+          </div>
+
+          {/* Canvas Radar Scope Screen */}
+          <div
+            style={{
+              background: '#010804',
+              border: `2px solid ${alarmState === 'ALARM' ? '#ef4444' : '#064e22'}`,
+              borderRadius: 12,
+              padding: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxShadow: alarmState === 'ALARM' ? '0 0 16px rgba(239,68,68,0.3)' : 'inset 0 0 14px rgba(0,0,0,0.8)',
+              transition: 'border 0.2s',
+            }}
+          >
+            <canvas
+              ref={canvasRef}
+              width={340}
+              height={180}
+              style={{ width: '100%', height: 'auto', display: 'block' }}
+            />
+
+            {/* Sweep Angle & Real-Time Proximity Status Bar */}
+            <div
+              style={{
+                width: '100%',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingTop: 8,
+                borderTop: '1px solid #064e22',
+                marginTop: 6,
+                fontSize: 10,
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              <div style={{ color: '#4ade80' }}>
+                ANGLE: <span style={{ color: '#ffffff', fontWeight: 800 }}>{angle}°</span>
+              </div>
+              <div
+                style={{
+                  color: alarmState === 'ALARM' ? '#ef4444' : alarmState === 'CAUTION' ? '#f59e0b' : '#10b981',
+                  fontWeight: 800,
+                }}
+              >
+                {currentDistance ? `TARGET: ${currentDistance}cm` : 'RANGE: CLEAR'}
+              </div>
+            </div>
+          </div>
+
+          {/* Decoupling Capacitor Safety Simulator */}
+          <div
+            style={{
+              background: T.surfaceAlt,
+              border: `1px solid ${brownoutWarning ? '#ef4444' : T.border}`,
+              borderRadius: 8,
+              padding: '8px 10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 10.5, fontWeight: 700, color: T.text }}>
+                100μF Decoupling Capacitor
+              </div>
+              <div style={{ fontSize: 9, color: brownoutWarning ? '#ef4444' : T.textSub }}>
+                {brownoutWarning ? '⚠️ BROWNOUT RESET DETECTED!' : 'Buffers servo motor inrush spikes'}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setDecouplingCapacitor(!decouplingCapacitor)}
+              style={{
+                background: decouplingCapacitor ? T.greenBg : '#ef444420',
+                color: decouplingCapacitor ? T.green : '#ef4444',
+                border: `1px solid ${decouplingCapacitor ? T.greenBorder : '#ef4444'}`,
+                borderRadius: 6,
+                padding: '4px 8px',
+                fontSize: 10,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {decouplingCapacitor ? '✓ Installed' : '❌ Removed'}
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Polar Sonar Radar Scope */}
-      <div
-        style={{
-          background: '#010503',
-          border: '1px solid #052e16',
-          borderRadius: 10,
-          padding: 10,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          boxShadow: 'inset 0 0 20px rgba(5, 46, 22, 0.4)',
-        }}
-      >
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', fontSize: 9.5, color: '#22c55e', fontFamily: "'JetBrains Mono'", marginBottom: 4 }}>
-          <span>POLAR SWEEP (180°)</span>
-          <span style={{ color: '#86efac' }}>CLICK TO DROP TARGET</span>
-        </div>
-
-        <canvas
-          ref={canvasRef}
-          width={300}
-          height={165}
-          onClick={handleCanvasClick}
-          style={{ cursor: 'crosshair', maxWidth: '100%', height: 'auto' }}
-        />
-
-        {/* Real-time Telemetry Bar */}
+      {/* ── TAB 2: INTERACTIVE TARGET FIELD & POLAR CONVERTER ── */}
+      {activeTab === 'targets' && (
         <div
           style={{
-            width: '100%',
+            background: T.surfaceAlt,
+            border: `1px solid ${T.border}`,
+            borderRadius: 10,
+            padding: 12,
             display: 'flex',
-            justifyContent: 'space-between',
-            fontSize: 10,
-            fontFamily: "'JetBrains Mono'",
-            color: '#86efac',
-            marginTop: 8,
-            borderTop: '1px solid #052e16',
-            paddingTop: 6,
+            flexDirection: 'column',
+            gap: 12,
           }}
         >
-          <div>ANG: <strong>{angle}°</strong></div>
-          <div>
-            STATUS:{' '}
-            <strong style={{ color: alarmState === 'ALARM' ? '#ef4444' : '#22c55e' }}>
-              {alarmState}
-            </strong>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: T.text }}>
+              Target Field & Polar Coordinates
+            </span>
+            <span style={{ fontSize: 9.5, fontFamily: "'JetBrains Mono'", color: T.primary, fontWeight: 700 }}>
+              (r, θ) ➔ (X, Y)
+            </span>
           </div>
-          <div>DIST: <strong>{currentDistance ? `${currentDistance}cm` : 'SCANNING'}</strong></div>
-        </div>
-      </div>
 
-      {/* Decoupling Capacitor Switch & FSM Architecture */}
-      <div
-        style={{
-          background: T.surfaceAlt,
-          border: `1px solid ${T.border}`,
-          borderRadius: 8,
-          padding: 10,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 10.5, fontWeight: 700, color: T.text }}>
-            100μF Power Decoupling
+          {/* Add Target Controls */}
+          <div
+            style={{
+              background: T.surface,
+              border: `1px solid ${T.border}`,
+              borderRadius: 8,
+              padding: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+              <span style={{ color: T.textSub }}>Target Angle (θ):</span>
+              <span style={{ fontFamily: "'JetBrains Mono'", fontWeight: 800, color: T.primary }}>{newTargetAngle}°</span>
+            </div>
+            <input
+              type="range"
+              min="15"
+              max="165"
+              value={newTargetAngle}
+              onChange={(e) => setNewTargetAngle(parseInt(e.target.value))}
+              style={{ width: '100%', accentColor: T.primary }}
+            />
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+              <span style={{ color: T.textSub }}>Target Distance (r):</span>
+              <span style={{ fontFamily: "'JetBrains Mono'", fontWeight: 800, color: '#f59e0b' }}>{newTargetDist} cm</span>
+            </div>
+            <input
+              type="range"
+              min="5"
+              max="38"
+              value={newTargetDist}
+              onChange={(e) => setNewTargetDist(parseInt(e.target.value))}
+              style={{ width: '100%', accentColor: '#f59e0b' }}
+            />
+
+            {/* Cartesian Coordinate Preview */}
+            <div
+              style={{
+                background: T.surfaceAlt,
+                padding: '6px 8px',
+                borderRadius: 6,
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: 9.5,
+                fontFamily: "'JetBrains Mono'",
+              }}
+            >
+              <span style={{ color: T.textSub }}>X = r·cos(θ): {cartX}cm</span>
+              <span style={{ color: T.textSub }}>Y = r·sin(θ): {cartY}cm</span>
+            </div>
+
+            <button
+              onClick={addTarget}
+              style={{
+                background: T.primary,
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px 12px',
+                fontSize: 10.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              + Place Target in Field
+            </button>
           </div>
-          <div style={{ fontSize: 9.5, color: T.textSub }}>
-            Prevents servo inductive surge resets
+
+          {/* Active Targets List */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span style={{ fontSize: 10.5, fontWeight: 700, color: T.text }}>Active Obstacles in Arena:</span>
+            {targets.map((t, idx) => (
+              <div
+                key={t.id}
+                style={{
+                  background: T.surface,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 6,
+                  padding: '6px 8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: 10,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: t.distance < 15 ? '#ef4444' : '#10b981' }} />
+                  <span style={{ fontFamily: "'JetBrains Mono'", fontWeight: 700 }}>
+                    #{idx + 1}: {t.angle}° @ {t.distance}cm
+                  </span>
+                </div>
+                <button
+                  onClick={() => removeTarget(t.id)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#ef4444',
+                    cursor: 'pointer',
+                    fontSize: 10,
+                    fontWeight: 700,
+                  }}
+                >
+                  ✕ Remove
+                </button>
+              </div>
+            ))}
           </div>
         </div>
+      )}
 
-        <button
-          onClick={() => setDecouplingCapacitor(!decouplingCapacitor)}
+      {/* ── TAB 3: SERIAL TELEMETRY STREAM / PLOTTER ── */}
+      {activeTab === 'telemetry' && (
+        <div
           style={{
-            background: decouplingCapacitor ? T.greenBg : 'rgba(239, 68, 68, 0.15)',
-            color: decouplingCapacitor ? T.green : '#ef4444',
-            border: `1px solid ${decouplingCapacitor ? T.greenBorder : '#ef4444'}`,
-            borderRadius: 4,
-            padding: '4px 8px',
-            fontSize: 10,
-            fontWeight: 700,
-            cursor: 'pointer',
+            background: '#040810',
+            border: `1px solid ${T.border}`,
+            borderRadius: 8,
+            overflow: 'hidden',
+            fontFamily: "'JetBrains Mono', monospace",
           }}
         >
-          {decouplingCapacitor ? '✓ Connected' : '✕ Removed (Surge)'}
-        </button>
-      </div>
+          <div
+            style={{
+              background: '#0b1324',
+              padding: '6px 10px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              borderBottom: '1px solid #1e293b',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 9.5, color: '#94a3b8' }}>
+              <span style={{ color: '#22c55e' }}>●</span>
+              SERIAL PLOTTER STREAM ("ANGLE,DIST\n")
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(telemetryLogs.join('\n'));
+                  setCopiedTelemetry(true);
+                  setTimeout(() => setCopiedTelemetry(false), 2000);
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: copiedTelemetry ? '#10b981' : '#38bdf8',
+                  fontSize: 9.5,
+                  cursor: 'pointer',
+                }}
+              >
+                {copiedTelemetry ? 'Copied!' : 'Copy CSV'}
+              </button>
+              <button
+                onClick={() => setTelemetryLogs([])}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: 9.5,
+                  cursor: 'pointer',
+                }}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
 
-      {/* Serial Output Feed */}
-      <div
-        style={{
-          background: '#020617',
-          border: `1px solid ${T.border}`,
-          borderRadius: 6,
-          padding: '8px 10px',
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: 10,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <span style={{ color: '#64748b' }}>SERIAL "ANGLE,DIST":</span>
-        <span style={{ color: '#86efac', fontWeight: 700 }}>
-          {angle},{currentDistance || 0}
-        </span>
-      </div>
+          <div
+            style={{
+              padding: '8px 10px',
+              height: 120,
+              overflowY: 'auto',
+              fontSize: 9.5,
+              color: '#38bdf8',
+              lineHeight: 1.6,
+            }}
+          >
+            {telemetryLogs.map((log, i) => (
+              <div key={i} style={{ whiteSpace: 'nowrap' }}>
+                {log}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 4: MASTER BREADBOARD PINOUT & MECHATRONIC WIRING ── */}
+      {activeTab === 'wiring' && (
+        <div
+          style={{
+            background: T.surfaceAlt,
+            border: `1px solid ${T.border}`,
+            borderRadius: 10,
+            padding: 12,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 10,
+          }}
+        >
+          <div style={{ fontSize: 11.5, fontWeight: 800, color: T.text }}>
+            Day 5 Capstone Unified Pinout Map
+          </div>
+          <p style={{ fontSize: 10.5, color: T.textSub, lineHeight: 1.5, margin: 0 }}>
+            Every subsystem interfaces concurrently without GPIO or timer resource conflicts.
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {[
+              { from: 'Servo Signal', to: 'Uno Pin 10 (Timer1)', net: '50Hz PPM Sweep', color: '#f59e0b' },
+              { from: 'Sonar Trig', to: 'Uno Pin 12', net: '10μs Pulse Trigger', color: '#38bdf8' },
+              { from: 'Sonar Echo', to: 'Uno Pin 13', net: 'Time-of-Flight Return', color: '#10b981' },
+              { from: 'I2C LCD SDA', to: 'Uno Pin A4', net: 'I2C Serial Data', color: '#a855f7' },
+              { from: 'I2C LCD SCL', to: 'Uno Pin A5', net: 'I2C Serial Clock', color: '#6366f1' },
+              { from: 'Piezo Buzzer', to: 'Uno Pin 11 (Timer2)', net: 'tone() Proximity Alarm', color: '#ef4444' },
+              { from: 'Red Status LED', to: 'Uno Pin 8 + 220Ω', net: 'Visual Warning Flasher', color: '#ef4444' },
+              { from: '100μF Buffer Cap', to: 'Across 5V & GND Rails', net: 'Inrush Brownout Guard', color: '#3b82f6' },
+            ].map((conn, idx) => (
+              <div
+                key={idx}
+                style={{
+                  background: T.surface,
+                  border: `1px solid ${T.border}`,
+                  borderRadius: 6,
+                  padding: '6px 8px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: 10,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: conn.color }} />
+                  <span style={{ fontWeight: 700, color: T.text, fontFamily: "'JetBrains Mono'" }}>{conn.from}</span>
+                  <span style={{ color: T.textMuted }}>➔</span>
+                  <span style={{ color: T.textSub }}>{conn.to}</span>
+                </div>
+                <span style={{ fontFamily: "'JetBrains Mono'", fontSize: 9, color: T.primary, fontWeight: 700 }}>
+                  {conn.net}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
